@@ -1,0 +1,1470 @@
+<title>1% Better Trial</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: phone-first single column, fixed bottom tab bar (Today / Calendar / Wrapped), sheet modal for logging */
+:root{
+  --bg:#F3F5F2; --surface:#FFFFFF; --sunk:#E8ECE7; --line:#D6DDD5;
+  --fg:#17201C; --muted:#5D6B64; --accent:#2E7A57; --accent-ink:#FFFFFF;
+  --physical:#D9482F; --mental:#4A5BD0; --spiritual:#B88712; --social:#C2427F; --skill:#1C8C7D;
+  --ok:#2E7A57; --warn:#B4690E;
+  --wrap-bg:#141A2E; --wrap-fg:#F4F1FF;
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, Menlo, monospace;
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101512; --surface:#18201B; --sunk:#202A24; --line:#2D3832;
+  --fg:#E8EEEA; --muted:#97A59D; --accent:#5CC08F; --accent-ink:#08130D;
+  --physical:#F06A52; --mental:#7C8BF2; --spiritual:#E2B23C; --social:#E46BA4; --skill:#3FC2AF;
+  --ok:#5CC08F; --warn:#E5A04A; --wrap-bg:#0B0F1E; --wrap-fg:#F4F1FF; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101512; --surface:#18201B; --sunk:#202A24; --line:#2D3832;
+  --fg:#E8EEEA; --muted:#97A59D; --accent:#5CC08F; --accent-ink:#08130D;
+  --physical:#F06A52; --mental:#7C8BF2; --spiritual:#E2B23C; --social:#E46BA4; --skill:#3FC2AF;
+  --ok:#5CC08F; --warn:#E5A04A; --wrap-bg:#0B0F1E; --wrap-fg:#F4F1FF; color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px calc(96px + env(safe-area-inset-bottom,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0}
+.eyebrow{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.banner{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--sunk);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--muted);margin-bottom:14px}
+.banner button{background:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:600}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:18px}
+.top h1{font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.top h1 span{color:var(--accent)}
+.streak{text-align:right;font-size:12.5px;color:var(--muted)}
+.streak b{display:block;font-family:var(--f-mono);font-size:20px;color:var(--fg)}
+
+/* views */
+.view[hidden]{display:none}
+section+section{margin-top:22px}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;gap:8px}
+.sec-head h2{font-size:19px;font-weight:700}
+
+/* compound meter */
+.compound{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;grid-template-columns:auto 1fr;gap:4px 16px;align-items:center}
+.compound .big{font-family:var(--f-mono);font-size:34px;font-weight:700;letter-spacing:-.03em;grid-row:span 2}
+.compound .big small{font-size:15px;color:var(--muted);font-weight:500}
+.compound p{margin:0;font-size:13.5px;color:var(--muted)}
+.compound strong{color:var(--fg)}
+
+/* goals */
+.goals{display:grid;gap:10px}
+.goal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.goal-top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.goal-top h3{font-size:15px;font-family:var(--f-body);font-weight:700}
+.goal-top .rule{font-size:12px;color:var(--muted)}
+.pill{font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 9px;white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.pill.todo{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.areas-row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.ac{border-radius:9px;padding:7px 4px 6px;text-align:center;background:var(--sunk);position:relative;overflow:hidden}
+.ac .n{font-family:var(--f-mono);font-weight:700;font-size:16px;position:relative}
+.ac .l{font-size:10.5px;color:var(--muted);position:relative;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ac .fill{position:absolute;inset:auto 0 0 0;background:var(--c);opacity:.22}
+.ac.done .n{color:var(--c)}
+.goal .hint{font-size:12.5px;color:var(--muted);margin-top:9px}
+
+/* log buttons */
+.log-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.log-grid>:last-child:nth-child(odd){grid-column:1/-1}
+.field[hidden],.view[hidden]{display:none}
+.log-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 13px;transition:border-color .15s,transform .15s}
+.log-btn:hover{border-color:var(--c)}
+.log-btn:active{transform:scale(.98)}
+.log-btn .dot{width:10px;height:10px;border-radius:50%;background:var(--c);margin-bottom:6px}
+.log-btn b{font-family:var(--f-display);font-size:16px}
+.log-btn span{font-size:12px;color:var(--muted);line-height:1.3}
+.log-btn.today-done{border-color:color-mix(in srgb,var(--c) 55%,var(--line))}
+.log-btn .tick{font-size:11px;font-weight:700;color:var(--c);margin-top:4px}
+
+/* entries */
+.entries{display:grid;gap:8px}
+.entry{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;display:grid;grid-template-columns:4px 1fr auto;gap:12px}
+.entry .bar{background:var(--c);border-radius:4px}
+.entry .meta{font-size:12px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.entry .meta b{color:var(--c);font-weight:700}
+.entry .what{font-weight:600;margin-top:2px}
+.entry .sum{margin:3px 0 0;font-size:14px;color:var(--fg);overflow-wrap:anywhere}
+.entry .body{min-width:0}
+.entry .acts{display:flex;flex-direction:column;gap:4px}
+.icon-btn{background:none;border:1px solid transparent;border-radius:8px;padding:4px 8px;font-size:12px;color:var(--muted);font-weight:600}
+.icon-btn:hover{border-color:var(--line);color:var(--fg)}
+.icon-btn.danger{color:var(--physical)}
+.empty{border:1.5px dashed var(--line);border-radius:var(--r);padding:20px;text-align:center;color:var(--muted);font-size:14px}
+.empty button{margin-top:10px}
+
+.btn{border:0;border-radius:11px;padding:11px 18px;font-weight:700;background:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--fg)}
+
+/* calendar */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+.cal-nav h2{font-size:22px;font-weight:800;letter-spacing:-.01em}
+.cal-nav .navs{display:flex;gap:6px}
+.cal-legend{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--muted);margin-bottom:10px}
+.cal-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--c);margin-right:5px;vertical-align:-1px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr) 30px;gap:4px}
+.cal .dow{font-size:11px;color:var(--muted);text-align:center;font-weight:600;padding-bottom:2px}
+.day{aspect-ratio:1/1.08;background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:4px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;text-align:left}
+.day.out{opacity:.35}
+.day.future{background:transparent}
+.day.today{border-color:var(--accent);border-width:2px}
+.day.sel{outline:2px solid var(--fg);outline-offset:1px}
+.day .d{font-family:var(--f-mono);font-size:12px;font-weight:700}
+.day .stripes{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;height:22%;min-height:6px}
+.day .stripes i{border-radius:2px;background:var(--sunk)}
+.day .stripes i.on{background:var(--c)}
+.wk{display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;border-radius:8px}
+.wk.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 13%,transparent)}
+.wk.no{color:var(--line)}
+.day-panel{margin-top:18px}
+
+/* wrapped */
+.wrapped-ctl{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.wrapped-ctl select{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:6px 10px}
+.story{position:relative;background:var(--wrap-bg);color:var(--wrap-fg);border-radius:22px;overflow:hidden;min-height:470px;display:flex;flex-direction:column;color-scheme:dark;isolation:isolate}
+.story canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.bars{display:flex;gap:4px;padding:14px 16px 0}
+.bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.22);overflow:hidden}
+.bars i.on{background:rgba(255,255,255,.95)}
+.slide{flex:1;display:flex;flex-direction:column;justify-content:center;padding:26px 24px 30px;gap:10px;animation:rise .45s ease both}
+@keyframes rise{from{opacity:.0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.slide .kick{font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.75;font-weight:700}
+.slide .huge{font-family:var(--f-display);font-weight:800;font-size:clamp(64px,22vw,118px);line-height:.9;letter-spacing:-.04em}
+.slide .h{font-family:var(--f-display);font-weight:700;font-size:clamp(24px,6.5vw,34px);line-height:1.08;letter-spacing:-.01em;text-wrap:balance}
+.slide p{margin:0;font-size:15.5px;opacity:.85;max-width:34ch}
+.slide .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.slide .chips span{background:rgba(255,255,255,.12);border-radius:999px;padding:4px 11px;font-size:13px}
+.slide .quote{font-family:var(--f-display);font-size:21px;line-height:1.25;border-left:3px solid var(--wrap-accent,#fff);padding-left:14px;max-width:30ch;overflow-wrap:anywhere}
+.abars{display:grid;gap:9px;margin-top:8px}
+.abar{display:grid;grid-template-columns:86px 1fr 40px;gap:10px;align-items:center;font-size:13.5px}
+.abar .track{height:12px;border-radius:6px;background:rgba(255,255,255,.1);overflow:hidden}
+.abar .track i{display:block;height:100%;border-radius:6px;background:var(--c)}
+.abar .v{font-family:var(--f-mono);text-align:right}
+.tapzones{position:absolute;inset:40px 0 0;display:grid;grid-template-columns:1fr 2fr}
+.tapzones button{background:none;border:0}
+.story-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));z-index:20}
+.tabs .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);gap:2px}
+.tabs button{background:none;border:0;border-radius:10px;padding:7px 2px;font-weight:700;font-size:11.5px;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabs button svg{width:20px;height:20px}
+.tabs button[aria-selected="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 11%,transparent)}
+
+/* sheet */
+dialog{border:0;padding:0;background:transparent;max-width:100vw;max-height:100dvh;width:100%;margin:0;inset:auto 0 0 0}
+dialog::backdrop{background:rgba(10,14,12,.5)}
+.sheet{background:var(--surface);color:var(--fg);border-radius:20px 20px 0 0;max-width:560px;margin:0 auto;padding:18px max(18px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px));max-height:92dvh;overflow:auto}
+.sheet h2{font-size:22px;font-weight:800;margin-bottom:4px}
+.sheet .sub{color:var(--muted);font-size:13px;margin:0 0 14px}
+.field{display:grid;gap:5px;margin-bottom:13px}
+.field label{font-size:13px;font-weight:700}
+.field .help{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;width:100%}
+.field textarea{min-height:92px;resize:vertical}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1.5px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700}
+.seg button[aria-pressed="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--bg));color:var(--fg)}
+.count{font-size:12px;font-weight:600}
+.count.ok{color:var(--ok)}
+.count.no{color:var(--warn)}
+.sheet-acts{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 16px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:30;transition:opacity .2s}
+.toast[hidden]{display:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:380px){.areas-row .ac .l{font-size:9.5px}.cal{grid-template-columns:repeat(7,1fr) 22px;gap:3px}}
+
+/* group + pot */
+.field[hidden],.view[hidden]{display:none}
+.log-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.log-grid>:last-child:nth-child(odd){grid-column:1/-1}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h3{font-size:16px;font-family:var(--f-body);font-weight:700}
+.card p{margin:6px 0 0;color:var(--muted);font-size:13.5px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.spread{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.who{font-weight:700}
+.badge{font-size:11px;font-weight:700;border-radius:999px;padding:2px 8px;white-space:nowrap}
+.badge.warn{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.badge.ok{background:color-mix(in srgb,var(--ok) 16%,transparent);color:var(--ok)}
+.badge.bad{background:color-mix(in srgb,var(--physical) 15%,transparent);color:var(--physical)}
+.badge.muted{background:var(--sunk);color:var(--muted)}
+.chipbtn{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:700;color:var(--fg)}
+.chipbtn[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,var(--surface))}
+.chipbtn.cap[aria-pressed="true"]{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,var(--surface))}
+.chipbtn:disabled{opacity:.5;cursor:default}
+.entry .vote-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+.thumbs{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.thumbs button{padding:0;border:0;background:none;border-radius:10px;overflow:hidden;width:84px;height:84px}
+.thumbs img{width:100%;height:100%;object-fit:cover;display:block}
+.thumbs .tag{position:relative}
+.proofnote{margin-top:6px;font-size:13px;border-left:3px solid var(--ok);padding-left:9px}
+.member-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.day .cam{position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:var(--fg);opacity:.55}
+.day{position:relative}
+.day.pass{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--sunk) 6px 9px)}
+.photo-pick{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.photo-pick img{width:64px;height:64px;object-fit:cover;border-radius:10px}
+.photo-pick label.btn{display:inline-block;cursor:pointer;font-size:13px;padding:8px 14px}
+.photo-pick input{position:absolute;opacity:0;width:1px;height:1px}
+
+.jar-card{position:relative;background:var(--wrap-bg);color:var(--wrap-fg);border-radius:22px;overflow:hidden;min-height:330px;isolation:isolate;color-scheme:dark}
+.jar-card canvas{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.jar-top{padding:18px 20px 0;display:grid;gap:2px}
+.jar-top .kick{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;opacity:.7;font-weight:700}
+.jar-top .amt{font-family:var(--f-display);font-weight:800;font-size:clamp(52px,16vw,84px);line-height:.95;letter-spacing:-.03em}
+.jar-top .sub2{font-size:13.5px;opacity:.8;max-width:52%}
+.jar-stats{position:absolute;left:20px;right:20px;bottom:16px;display:flex;gap:18px;flex-wrap:wrap;font-size:12.5px;opacity:.9}
+.jar-stats b{display:block;font-family:var(--f-mono);font-size:17px}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.mrow:first-child{border-top:0;padding-top:2px}
+.mbars{grid-column:1/-1;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.mbars i{height:7px;border-radius:4px;background:var(--sunk);position:relative;overflow:hidden}
+.mbars i b{position:absolute;inset:0 auto 0 0;background:var(--c);border-radius:4px}
+.ledger{display:grid;gap:0}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.lrow>*{min-width:0}
+.lrow .row{flex-wrap:nowrap;justify-content:flex-end}
+.lrow:first-child{border-top:0}
+.money{font-family:var(--f-mono);font-weight:700}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.settings-grid .field{margin:0}
+details.card summary{cursor:pointer;font-weight:700}
+.day-sheet{min-height:62dvh}
+.ds-head{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.ds-head h2{flex:1;min-width:0;font-size:20px;margin:0}
+.ds-head .who{font-size:12px;color:var(--muted);font-weight:600;display:block}
+.ds-nav{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:var(--bg);font-size:18px;line-height:1;display:grid;place-items:center;padding:0}
+.ds-nav:disabled{opacity:.35;cursor:default}
+.cat-tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin-bottom:14px}
+.cat-tabs button{border:1.5px solid var(--line);background:var(--bg);border-radius:12px;padding:8px 2px 7px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:var(--muted);min-width:0}
+.cat-tabs button i{width:9px;height:9px;border-radius:50%;background:var(--c);opacity:.35}
+.cat-tabs button b{font-family:var(--f-mono);font-size:15px;color:var(--fg)}
+.cat-tabs button.has i{opacity:1}
+.cat-tabs button:not(.has) b{color:var(--muted);font-weight:500}
+.cat-tabs button[aria-selected="true"]{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,var(--bg));color:var(--fg)}
+.cat-tabs button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero-photos{display:grid;gap:8px;margin-bottom:12px}
+.hero-photos button{padding:0;border:0;background:var(--sunk);border-radius:16px;overflow:hidden;position:relative;display:block;width:100%}
+.hero-photos img{width:100%;max-height:48dvh;object-fit:cover;display:block}
+.hero-photos .tag{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11.5px;font-weight:700;border-radius:999px;padding:3px 9px}
+.goal .ac{border:1.5px solid transparent;font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,transform .1s}
+.goal .ac:hover{border-color:var(--c)}
+.goal .ac:active{transform:scale(.96)}
+.goal .ac .today-dot{position:absolute;top:5px;right:5px;width:6px;height:6px;border-radius:50%;background:var(--c)}
+.cs-status{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:13.5px;color:var(--muted)}
+.cs-status b{color:var(--fg)}
+.cs-log{width:100%;padding:13px;font-size:15px;margin-bottom:16px;background:var(--c);color:#fff}
+.cs-sub{font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:16px 0 8px}
+.g-intro{margin:-4px 0 12px;color:var(--muted);font-size:13.5px}
+.goals{gap:14px}
+.goal.g2{padding:18px 16px 16px;border-radius:20px;display:grid;gap:14px}
+.goal.g2.met{border-color:color-mix(in srgb,var(--ok) 55%,var(--line))}
+.g-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.g-title h3{font-family:var(--f-display);font-size:22px;font-weight:800;letter-spacing:-.01em}
+.g-title .rule{font-size:12.5px;color:var(--muted);margin-top:2px}
+.g-left{text-align:right;line-height:1}
+.g-left b{display:block;font-size:44px;font-weight:700;letter-spacing:-.04em}
+.g-left span{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.08em}
+.g-left.urgent b{color:var(--warn)}
+.goal.met .g-left b{color:var(--ok)}
+.g-bar{height:8px;border-radius:5px;background:var(--sunk);overflow:hidden}
+.g-bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 55%,var(--surface)),var(--accent));transition:width .5s ease}
+.g-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.g-tile{position:relative;border:0;border-radius:14px;padding:12px 2px 10px;min-height:96px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;cursor:pointer;font:inherit;
+  background:color-mix(in srgb,var(--c) var(--k),var(--surface));color:var(--fg);box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 35%,transparent);transition:transform .1s,background .3s}
+.g-tile:active{transform:scale(.95)}
+.g-tile:hover{box-shadow:inset 0 0 0 2px var(--c)}
+.g-tile.done{color:#fff;box-shadow:none}
+.g-n{font-size:22px;font-weight:700;line-height:1}
+.g-n small{font-size:12px;opacity:.6;font-weight:500}
+.g-name{font-size:11px;font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.g-check{position:absolute;top:7px;left:0;right:0;text-align:center;font-size:13px;font-weight:800;height:16px}
+.g-today{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.75}
+.g-tile:not(.done) .g-today{background:var(--c);opacity:1}
+.g-req{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.g-req li{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;font-size:14.5px}
+.g-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff}
+.g-req li.ok .g-dot{background:var(--ok);border-color:var(--ok)}
+.g-req li.ok .g-text{color:var(--muted);text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--muted) 50%,transparent)}
+.g-prog{font-size:13px;color:var(--muted)}
+.g-state{display:block;font-style:normal;font-size:11.5px;font-weight:700;margin-top:6px;border-radius:999px;padding:2px 8px}
+.g-state.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.g-state.bad{color:var(--physical);background:color-mix(in srgb,var(--physical) 13%,transparent)}
+.goal.met .g-left b{color:var(--ok)}
+.goal.broken{border-color:color-mix(in srgb,var(--physical) 45%,var(--line))}
+.goal.broken .g-bar i{background:color-mix(in srgb,var(--physical) 70%,var(--surface))}
+.g-req li.bad .g-dot{background:var(--physical);border-color:var(--physical)}
+.g-req li.bad .g-text{color:var(--physical);font-weight:600}
+.g-money.bad{color:var(--physical);background:color-mix(in srgb,var(--physical) 10%,transparent)}
+.g-money{font-size:13px;color:var(--warn);font-weight:600;background:color-mix(in srgb,var(--warn) 10%,transparent);border-radius:10px;padding:8px 11px}
+@media (max-width:370px){.g-tile{min-height:84px}.g-n{font-size:19px}.g-name{font-size:10px}}
+.social{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center}
+.react{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:3px 9px;font-size:14px;display:inline-flex;gap:4px;align-items:center;color:var(--fg)}
+.react .num{font-size:12px;color:var(--muted)}
+.react.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,var(--bg))}
+.react:disabled{cursor:default;opacity:1}
+.react.cmt-btn{font-size:12.5px;font-weight:600;color:var(--muted)}
+.cmts{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:5px;font-size:13.5px}
+.cmts li{background:var(--sunk);border-radius:10px;padding:6px 10px;overflow-wrap:anywhere}
+.cmt-form{display:flex;gap:6px;margin-top:8px}
+.cmt-form input{flex:1;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.cmt-form .btn{padding:8px 14px;font-size:13px}
+.lb-row{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.lb-row:first-child{border-top:0;padding-top:0}
+.lb-rank{font-family:var(--f-mono);font-weight:700;font-size:16px;color:var(--muted);text-align:center}
+.lb-row.top .lb-rank{color:var(--spiritual)}
+.lb-meta{font-size:12.5px;color:var(--muted)}
+.lb-days{font-family:var(--f-mono);font-weight:700;text-align:right}
+.lb-days small{display:block;font-family:var(--f-body);font-weight:500;font-size:11px;color:var(--muted)}
+.no-photo{border:1.5px dashed var(--line);border-radius:16px;padding:22px;text-align:center;color:var(--muted);font-size:13px;margin-bottom:12px}
+#lightbox{inset:0;margin:auto;width:auto;max-width:94vw;max-height:94dvh}
+#lightbox img{max-width:94vw;max-height:84dvh;border-radius:14px;display:block}
+#lightbox .cap{color:#fff;text-align:center;font-size:13px;margin-top:8px}
+#lightbox::backdrop{background:rgba(0,0,0,.82)}
+
+/* trial additions */
+.trial-tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:var(--fg);color:var(--bg);border-radius:6px;padding:2px 6px;vertical-align:4px;margin-left:6px}
+.nudges{display:grid;gap:8px;margin-bottom:14px}
+.nudge{border-radius:14px;padding:11px 13px;font-size:14px;display:flex;gap:10px;align-items:flex-start;background:var(--sunk)}
+.nudge.warn{background:color-mix(in srgb,var(--warn) 13%,var(--surface));color:var(--fg)}
+.nudge.clown{background:color-mix(in srgb,var(--social) 13%,var(--surface))}
+.nudge.good{background:color-mix(in srgb,var(--ok) 13%,var(--surface))}
+.nudge .ico{font-size:20px;line-height:1}
+.picks{display:grid;gap:8px}
+.pick{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.pick .bar{align-self:stretch;background:var(--c);border-radius:4px}
+.pick .t{font-weight:600;font-size:14px}
+.pick .s{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick button[aria-pressed="true"]{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--surface))}
+.lockrow{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:var(--muted)}
+.need{margin-top:2px;font-size:13.5px;background:color-mix(in srgb,var(--accent) 9%,transparent);border-radius:10px;padding:9px 11px}
+.need b{font-weight:700}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--bg);cursor:pointer}
+.toggle input{width:20px;height:20px;accent-color:var(--accent)}
+.toggle span small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.daypick{display:flex;gap:6px}
+.board-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 10px;padding:12px 0;border-top:1px solid var(--line)}
+.board-row:first-child{border-top:0;padding-top:0}
+.board-row .nm{font-weight:700;font-size:15px}
+.board-row .sub{font-size:12.5px;color:var(--muted)}
+.roasts{grid-column:1/-1;display:grid;gap:5px}
+.roasts li{list-style:none;background:color-mix(in srgb,var(--social) 10%,var(--sunk));border-radius:10px;padding:6px 10px;font-size:13.5px}
+.roasts ul{margin:0;padding:0;display:grid;gap:5px}
+.feed-note{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;font-size:14px}
+.feed-note.party{background:color-mix(in srgb,var(--ok) 10%,var(--surface));border-color:color-mix(in srgb,var(--ok) 35%,var(--line))}
+.feed-note .when{font-size:12px;color:var(--muted)}
+.priv{font-style:italic;color:var(--muted)}
+.stakes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.stakes span{background:var(--sunk);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600}
+</style>
+
+<div class="wrap">
+  <div id="banner" class="banner" hidden></div>
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="todayLabel">Today</div>
+      <h1>1<span>%</span> Better<span class="trial-tag">Trial</span></h1>
+    </div>
+    <div class="streak"><b class="num" id="streakN">0</b><span id="streakLbl">weeks hit in a row</span></div>
+  </header>
+
+  <main id="view-today" class="view">
+    <div class="nudges" id="nudges"></div>
+    <section>
+      <div class="sec-head"><h2>Your goals</h2></div>
+      <p class="g-intro">Tap a category to check off what you did. Only 2 check-offs a day count, so spread them out.</p>
+      <div class="goals" id="goals"></div>
+    </section>
+    <section id="picksSec"></section>
+    <div id="todayExtra"></div>
+  </main>
+
+  <main id="view-calendar" class="view" hidden>
+    <div class="member-tabs" id="calMembers"></div>
+    <div class="cal-nav">
+      <h2 id="calTitle">Month</h2>
+      <div class="navs">
+        <button class="btn ghost" id="calPrev" aria-label="Previous month">‹</button>
+        <button class="btn ghost" id="calToday">Today</button>
+        <button class="btn ghost" id="calNext" aria-label="Next month">›</button>
+      </div>
+    </div>
+    <div class="cal-legend" id="calLegend"></div>
+    <div class="cal" id="cal"></div>
+    <p class="help" style="color:var(--muted);font-size:13px;margin-top:12px">Tap a day to see its check-offs and photos. Stripes show the 2 that counted.</p>
+  </main>
+
+  <main id="view-group" class="view" hidden><div id="groupBody"></div></main>
+
+  <main id="view-pot" class="view" hidden>
+    <div class="jar-card" id="jarCard">
+      <canvas id="jarCanvas"></canvas>
+      <div class="jar-top">
+        <div class="kick" id="jarKick">On the line this block</div>
+        <div class="amt num" id="jarAmt">$0</div>
+        <div class="sub2" id="jarSub"></div>
+      </div>
+      <div class="jar-stats" id="jarStats"></div>
+    </div>
+    <div id="potBody"></div>
+  </main>
+
+  <main id="view-wrapped" class="view" hidden>
+    <div class="wrapped-ctl">
+      <div><div class="eyebrow">Your year</div><h2 style="font-size:22px;font-weight:800">Wrapped</h2></div>
+      <select id="yearSel" aria-label="Year"></select>
+    </div>
+    <div class="story" id="story">
+      <canvas id="storyBg"></canvas>
+      <div class="bars" id="storyBars"></div>
+      <div id="slideHost" style="flex:1;display:flex"></div>
+      <div class="tapzones"><button id="tapPrev" aria-label="Previous"></button><button id="tapNext" aria-label="Next"></button></div>
+    </div>
+    <div class="story-foot"><span id="storyNote"></span><span class="num" id="storyPos"></span></div>
+  </main>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <div class="in">
+    <button role="tab" id="tab-today" aria-selected="true" data-view="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Today</button>
+    <button role="tab" id="tab-calendar" aria-selected="false" data-view="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendar</button>
+    <button role="tab" id="tab-group" aria-selected="false" data-view="group"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5M14.5 14.6c2.6-.6 5 .8 6 4.4"/></svg>Group</button>
+    <button role="tab" id="tab-pot" aria-selected="false" data-view="pot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7h10l1.5 3.5c1.5 3.5.5 9.5-6.5 9.5S4 14 5.5 10.5z"/><path d="M9 4h6M12 12v4M10.5 13h2.5"/></svg>Pay-ups</button>
+    <button role="tab" id="tab-wrapped" aria-selected="false" data-view="wrapped"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4.2 4 1.1 6L12 16l-4.9 3 1.1-6L4 9l5.5-.5z"/></svg>Wrapped</button>
+  </div>
+</nav>
+
+<dialog id="sheet">
+  <form class="sheet" id="logForm" method="dialog" novalidate>
+    <h2 id="sheetTitle">Check off</h2>
+    <p class="sub">Did it make you 1% better? Then it counts.</p>
+    <div class="field"><label>Category</label><div class="seg" id="areaSeg"></div></div>
+    <div class="field"><label for="fActivity">What did you do?</label><select id="fActivity"></select></div>
+    <div class="field" id="otherField" hidden><label for="fOther">Write your own</label><input id="fOther" autocomplete="off" placeholder="e.g. Cold plunge"></div>
+    <div class="field"><label for="fSummary">One sentence about it</label><textarea id="fSummary" style="min-height:70px"></textarea><div class="help"><span class="count no" id="sumCount"></span></div></div>
+    <div class="field"><label for="fDetail" id="fDetailLabel">Detail <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="fDetail" autocomplete="off"></div>
+    <div class="field" id="photoField">
+      <label>Photo <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <div class="photo-pick"><img id="fPhotoPrev" alt="" hidden><label class="btn ghost" for="fPhoto" id="fPhotoBtn">Add photo</label><input type="file" id="fPhoto" accept="image/*"><button type="button" class="icon-btn" id="fPhotoClear" hidden>Remove</button></div>
+    </div>
+    <div class="field"><label class="toggle" for="fNew"><span>Was this new?<small>Trying something for the first time</small></span><input type="checkbox" id="fNew"></label></div>
+    <div class="field" id="privField" hidden><label class="toggle" for="fPriv"><span>Keep details private<small>The group sees only the category</small></span><input type="checkbox" id="fPriv"></label></div>
+    <div class="field" id="dayField"><label>Day</label><div class="daypick" id="dayPick"></div><span class="help" id="dayHelp"></span></div>
+    <div class="sheet-acts">
+      <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+      <button type="submit" class="btn" id="saveBtn" disabled>Check off</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="proofSheet">
+  <form class="sheet" id="proofForm" method="dialog" novalidate>
+    <h2>Show your proof</h2>
+    <p class="sub">Two friends called cap. Add a photo or screenshot within 24 hours or this check-off won't count. Proof is visible to the group, even on a private entry.</p>
+    <div class="field"><label>Photo or screenshot</label><div class="photo-pick"><img id="pPhotoPrev" alt="" hidden><label class="btn ghost" for="pPhoto">Choose image</label><input type="file" id="pPhoto" accept="image/*"></div></div>
+    <div class="field"><label for="pNote">Anything to add?</label><textarea id="pNote"></textarea></div>
+    <div class="sheet-acts"><button type="button" class="btn ghost" id="proofCancel">Cancel</button><button type="submit" class="btn" id="proofSave" disabled>Submit proof</button></div>
+  </form>
+</dialog>
+
+<dialog id="passSheet">
+  <form class="sheet" id="passForm" method="dialog" novalidate>
+    <h2>Request a pass</h2>
+    <p class="sub">A pass is a free skip for one day. The group has 24 hours to vote. If more say yes than no, your weekly and two-week goals each drop by 1 check-off.</p>
+    <div class="field"><label for="passDate">Day</label><select id="passDate"></select></div>
+    <div class="field"><label for="passReason">One-line reason</label><input id="passReason" maxlength="120" placeholder="e.g. Flying home for my grandma's funeral"></div>
+    <div class="sheet-acts"><button type="button" class="btn ghost" id="passCancel">Cancel</button><button type="submit" class="btn" id="passSave" disabled>Send to group</button></div>
+  </form>
+</dialog>
+
+<dialog id="catSheet" aria-labelledby="csTitle"><div class="sheet day-sheet" id="csBody"></div></dialog>
+<dialog id="daySheet" aria-labelledby="dsTitle"><div class="sheet day-sheet" id="dsBody"></div></dialog>
+<dialog id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+/* ================= categories ================= */
+const AREAS = [
+  {id:"physical", name:"Physical", blurb:"Gym, sports, eating better, sleeping well", detail:"How long? (minutes)", num:true, acts:[
+    {id:"gym", label:"Gym"}, {id:"sports", label:"Sports"}, {id:"eat", label:"Ate better"}, {id:"sleep", label:"Slept well"}]},
+  {id:"mental", name:"Mental", blurb:"Silence and self-reflection, real conversation", detail:"How long? (minutes)", num:true, priv:true, acts:[
+    {id:"silence", label:"Sat in silence", nocap:true}, {id:"mreflect", label:"Self-reflection", nocap:true}, {id:"realconvo", label:"Real conversation"}]},
+  {id:"spiritual", name:"Spiritual", blurb:"Self-reflection, Bible, prayer, making space for the Creator", detail:"What passage or theme?", priv:true, acts:[
+    {id:"reflect", label:"Self-reflection", nocap:true}, {id:"bible", label:"Bible"}, {id:"prayer", label:"Prayer", nocap:true}, {id:"space", label:"Made space for the Creator"}]},
+  {id:"social", name:"Social", blurb:"Intentional hangout, meaningful conversation with someone new", detail:"Who with?", acts:[
+    {id:"hangout", label:"Intentional hangout"}, {id:"newperson", label:"Conversation with someone new"}]},
+  {id:"skill", name:"Skill/Art", blurb:"Reading, creating, building, instrument, writing, painting, photography", detail:"What are you working on?", acts:[
+    {id:"reading", label:"Reading"}, {id:"creative", label:"Creative expression"}, {id:"buildskill", label:"Building a skill"}, {id:"project", label:"Building a project"},
+    {id:"instrument", label:"Instrument"}, {id:"writing", label:"Writing"}, {id:"painting", label:"Painting"}, {id:"photo", label:"Photography"}]},
+];
+AREAS.forEach(a => a.acts.push({id:"other", label:"Write my own"}));
+const AREA = Object.fromEntries(AREAS.map(a => [a.id, a]));
+const actOf = (areaId, actId) => AREA[areaId].acts.find(x => x.id === actId) || AREA[areaId].acts.at(-1);
+const labelOf = e => e.activity === "other" && e.other ? e.other : actOf(e.area, e.activity).label;
+const MIN_WORDS = 4, MAX_GROUP = 6, DAILY = 2;
+const WEEK_VEC = [2,2,1,1,1], BLOCK_VEC = [3,3,3,3,2];
+
+/* ================= dates ================= */
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parse = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const monday = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return addDays(x, -((x.getDay()+6)%7)); };
+const ANCHOR = new Date(2024,0,1);
+const blockStart = d => { const m = monday(d); const wks = Math.round((m - ANCHOR)/(7*864e5)); return addDays(m, -((wks%2+2)%2)*7); };
+const todayStr = () => ymd(new Date());
+const daysBetween = (a, b) => Math.round((parse(b) - parse(a))/864e5);
+const fmtLong = s => parse(s).toLocaleDateString(undefined,{weekday:"long", month:"long", day:"numeric"});
+const fmtShort = d => (typeof d === "string" ? parse(d) : d).toLocaleDateString(undefined,{month:"short", day:"numeric"});
+const fmtDow = s => parse(s).toLocaleDateString(undefined,{weekday:"short", month:"short", day:"numeric"});
+const fmtWhen = ts => { const d = new Date(ts); return d.toLocaleDateString(undefined,{weekday:"short"}) + " " + d.toLocaleTimeString(undefined,{hour:"numeric", minute:"2-digit"}); };
+const H24 = 24*3600e3;
+const weekCloseTs = date => addDays(monday(parse(date)), 7).getTime();
+// You have 24 hours after a day ends to log it and pick its 2, but never past the week closing Sunday night.
+const dayCloseTs = date => Math.min(addDays(parse(date), 2).getTime(), weekCloseTs(date));
+
+/* ================= helpers ================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const words = s => (s.trim().match(/\S+/g) || []).length;
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const money = n => "$" + (Math.round(n*100)/100).toLocaleString(undefined,{minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits:2});
+const listAnd = a => a.length <= 1 ? (a[0]||"") : a.slice(0,-1).join(", ") + " and " + a.at(-1);
+let toastT;
+function toast(msg){ const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2400); }
+
+/* ================= state =================
+   logs/<id>/days/<date>  {date, entries:[...], picks:[id,id]|absent, locked:bool}
+   members/<id>           {joinedAt, joinDay}
+   votes/<id>             {cap, pass, react, cmt, nudge, roast}
+   passes/<id>            {req:{date:{reason, at}}}
+   paid/<id>              {got:{"block|from|to":true}}   (the receiver marks it)
+   group/settings         {name, history:[{cost, mode:"flat"|"per", from, at}]}  (creator only)  */
+const LS_KEY = "opb.trial.days.v1";
+const blank = () => ({me:null, settings:null, members:{}, logs:{}, votes:{}, passes:{}, paid:{}, names:{}});
+let mode = "loading", S = blank(), real = S;
+let db = null, userCap = null, assets = null, canWrite = true, isOwner = false;
+const logSubs = {};
+const dayDoc = (who, date) => (S.logs[who] && S.logs[who][date]) || null;
+const entriesOf = (who, date) => dayDoc(who, date)?.entries || [];
+const myLogs = () => (S.logs[S.me] ||= {});
+const memberIds = () => Object.keys(S.members).sort((a,b) => (S.members[a].joinedAt||0) - (S.members[b].joinedAt||0));
+const isMember = id => !!S.members[id];
+const nameOf = id => id === S.me ? "You" : (S.names[id] || "Group member");
+const others = who => memberIds().filter(v => v !== who);
+
+function lsLoad(){ try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}") || {}; } catch { return {}; } }
+function lsSave(){ try { localStorage.setItem(LS_KEY, JSON.stringify(myLogs())); } catch {} }
+let renderQueued = false;
+function queueRender(){ if (renderQueued) return; renderQueued = true; requestAnimationFrame(() => { renderQueued = false; renderAll(); }); }
+
+async function guard(p, what){
+  try { await p; return true; }
+  catch (e) { toast(`Couldn't save ${what}. ${e && e.code === "invalid_argument" ? "You need edit access to this app." : "Check your connection."}`); return false; }
+}
+async function persistDay(date){
+  if (mode === "demo") return;
+  if (mode !== "cloud") { lsSave(); return; }
+  const d = myLogs()[date];
+  const ref = db.doc(`logs/${S.me}/days/${date}`);
+  if (!(await guard(d && d.entries.length ? ref.set(d) : ref.delete(), "your check-off"))) lsSave();
+}
+const writeOwn = (coll, data, what) => mode === "cloud" ? guard(db.doc(`${coll}/${S.me}`).set(data), what) : Promise.resolve(true);
+const myVotes = () => (S.votes[S.me] ||= {});
+const saveVotes = () => writeOwn("votes", myVotes(), "that");
+const savePasses = () => writeOwn("passes", S.passes[S.me] || {}, "your pass request");
+const savePaid = () => writeOwn("paid", S.paid[S.me] || {}, "that payment");
+
+async function initStore(){
+  let settled = false;
+  const fallback = why => { if (settled) return; settled = true; real.me = "local"; real.logs.local = lsLoad(); if (mode !== "demo") mode = "local"; showBanner(why); queueRender(); };
+  if (!window.claude || !window.claude.use) { fallback("Saved in this browser only. Groups need you signed in to Claude."); return; }
+  const timer = setTimeout(() => fallback("Saved in this browser only. Sign in to Claude to use groups."), 10000);
+  try {
+    [db, userCap, assets] = await Promise.all([claude.use("db"), claude.use("user"), claude.use("assets")]);
+    const id = userCap ? await userCap.id() : null;
+    if (!db || !id) { clearTimeout(timer); fallback("Saved in this browser only. Sign in to Claude to use groups."); return; }
+    clearTimeout(timer); settled = true;
+    real.me = id; if (mode !== "demo") mode = "cloud";
+    isOwner = await userCap.isOwner().catch(() => false);
+    canWrite = (await userCap.can("data.write").catch(() => null)) !== false;
+    if (!canWrite) showBanner("You can look around, but to check off and vote, ask the group creator to invite you as an Editor."); else hideBanner();
+    subscribeLogs(id);
+    db.collection("members").onSnapshot(snap => { real.members = {}; snap.docs.forEach(d => real.members[d.id] = {...d.data()}); Object.keys(real.members).forEach(subscribeLogs); loadNames(); queueRender(); }, onErr);
+    const own = (coll, key) => db.collection(coll).onSnapshot(snap => { real[key] = {}; snap.docs.forEach(d => real[key][d.id] = JSON.parse(JSON.stringify(d.data()))); queueRender(); }, onErr);
+    own("votes","votes"); own("passes","passes"); own("paid","paid");
+    db.doc("group/settings").onSnapshot(d => { real.settings = d.exists ? JSON.parse(JSON.stringify(d.data())) : null; queueRender(); }, onErr);
+  } catch { clearTimeout(timer); fallback("Saved in this browser only."); }
+}
+function onErr(){ toast("Lost connection to the group. Reload to reconnect."); }
+function subscribeLogs(id){
+  if (logSubs[id] || !db) return;
+  logSubs[id] = db.collection(`logs/${id}/days`).onSnapshot(snap => {
+    const out = {}; snap.docs.forEach(d => { const v = d.data(); if (v && v.date && Array.isArray(v.entries)) out[v.date] = JSON.parse(JSON.stringify(v)); });
+    real.logs[id] = out; queueRender();
+  }, onErr);
+}
+async function loadNames(){
+  if (!userCap || !userCap.profiles) return;
+  try { const ps = await userCap.profiles(Object.keys(real.members)); for (const [k,p] of Object.entries(ps||{})) real.names[k] = (p && p.name) || ""; queueRender(); } catch {}
+}
+function showBanner(text, actionLabel, action){
+  const b = $("banner"); b.hidden = false;
+  b.innerHTML = `<span>${esc(text)}</span>` + (actionLabel ? `<button type="button" id="bannerBtn">${esc(actionLabel)}</button>` : "");
+  if (actionLabel) $("bannerBtn").onclick = action;
+}
+function hideBanner(){ $("banner").hidden = true; }
+function startDemo(){ S = makeDemo(); mode = "demo"; showBanner("You're looking at an example group. Nothing here is saved.", "Exit example", stopDemo); renderAll(); toast("Example group loaded"); }
+function stopDemo(){ S = real; mode = S.me === "local" ? "local" : S.me === "loading" ? "loading" : "cloud"; if (mode === "local") showBanner("Saved in this browser only. Groups need you signed in to Claude."); else if (canWrite) hideBanner(); renderAll(); }
+
+/* ================= rules ================= */
+const key3 = (who, date, id) => `${who}|${date}|${id}`;
+// The 2 that count for a day: the ones you picked, or your first 2.
+function pickedIds(who, date){
+  const d = dayDoc(who, date); if (!d) return [];
+  if (Array.isArray(d.picks)) return d.picks.filter(id => d.entries.some(e => e.id === id)).slice(0, DAILY);
+  return [...d.entries].sort((a,b) => (a.createdAt||0) - (b.createdAt||0)).slice(0, DAILY).map(e => e.id);
+}
+const dayLocked = (who, date) => !!dayDoc(who, date)?.locked || Date.now() >= dayCloseTs(date);
+const openDays = () => { const t = todayStr(), y = ymd(addDays(new Date(), -1)); return [t, y].filter(k => !dayLocked(S.me, k)); };
+
+/* Cap: two calls (one in a group of 2) and you have 24h to post proof, or it doesn't count.
+   Prayer, sitting in silence and self-reflection can't be capped. Caps can be called until the
+   entry's week closes, or 24h after it was logged if that's later. */
+function capInfo(who, date, e){
+  const k = key3(who, date, e.id); const el = others(who); const now = Date.now();
+  const cappable = !actOf(e.area, e.activity).nocap;
+  const need = Math.min(2, el.length);
+  const times = el.map(v => S.votes[v]?.cap?.[k]).filter(Boolean).sort((a,b) => a-b);
+  const capped = cappable && need > 0 && times.length >= need;
+  const cappedAt = capped ? times[need-1] : null;
+  const capCloses = Math.max(weekCloseTs(date), (e.createdAt||0) + H24);
+  let status = "ok", deadline = null;
+  if (capped) { if (e.proof) status = "proven"; else { deadline = cappedAt + H24; status = now < deadline ? "needproof" : "expired"; } }
+  return {key:k, n: times.length, need, cappable, capped, status, deadline, windowOpen: cappable && now < capCloses && !capped,
+    disputed: status === "needproof" || status === "expired", open: status === "needproof", mine: !!S.votes[S.me]?.cap?.[k]};
+}
+/* Passes: request before the week closes; everyone else has 24h; only votes cast count; tie = no. */
+function passInfo(who, date){
+  const req = S.passes[who]?.req?.[date]; if (!req) return null;
+  const k = `${who}|${date}`; let yes = 0, no = 0;
+  others(who).forEach(v => { const x = S.votes[v]?.pass?.[k]; if (x === "yes") yes++; if (x === "no") no++; });
+  const closes = (req.at||0) + H24; const pending = Date.now() < closes;
+  return {req, key:k, yes, no, closes, status: pending ? "pending" : yes > no ? "granted" : "denied", mine: S.votes[S.me]?.pass?.[k]};
+}
+function passesIn(who, start, n){
+  let granted = 0, pending = 0;
+  for (let i = 0; i < n; i++) { const p = passInfo(who, ymd(addDays(start, i))); if (p?.status === "granted") granted++; if (p?.status === "pending") pending++; }
+  return {granted, pending};
+}
+// Counted check-offs per category: only each day's 2, minus capped entries without proof.
+function countsIn(who, start, n){
+  const c = Object.fromEntries(AREAS.map(a => [a.id, 0])); let total = 0, days = 0;
+  for (let i = 0; i < n; i++) {
+    const k = ymd(addDays(start, i)); const ids = pickedIds(who, k); let any = false;
+    entriesOf(who, k).forEach(e => { if (!ids.includes(e.id)) return; if (isMember(who) && capInfo(who, k, e).disputed) return; c[e.area]++; total++; any = true; });
+    if (any) days++;
+  }
+  return {c, total, days};
+}
+// A goal is "any" counts, so it's a sorted list of targets: weekly [2,2,1,1,1], block [3,3,3,3,2].
+// A pass drops 1 check-off: repeats come off first, then any one category.
+function reduceVec(v, k){
+  v = [...v].sort((a,b) => b-a);
+  for (let i = 0; i < k; i++) {
+    const pos = v.filter(x => x > 0); if (!pos.length) break;
+    const m = Math.min(...pos); let j = -1;
+    for (let x = v.length-1; x >= 0; x--) if (v[x] > m) { j = x; break; }
+    if (j < 0) for (let x = v.length-1; x >= 0; x--) if (v[x] > 0) { j = x; break; }
+    v[j]--; v.sort((a,b) => b-a);
+  }
+  return v;
+}
+// Late joiners: one check-off per day left in the block, starting the day after they join.
+function proratedVec(d){
+  if (d <= 0) return null;
+  if (d < 5) return [1,1,1,1,1].map((x,i) => i < d ? 1 : 0);
+  if (d <= 10) return [1,1,1,1,1].map((x,i) => i < d-5 ? 2 : 1);
+  return [2,2,2,2,2].map((x,i) => i < d-10 ? 3 : 2);
+}
+// Pair targets with categories, biggest count first, so the app can say what's left.
+function assign(c, vec){
+  const order = [...AREAS].sort((a,b) => c[b.id] - c[a.id] || AREAS.indexOf(a) - AREAS.indexOf(b));
+  const v = [...vec].sort((a,b) => b-a); const t = {};
+  order.forEach((a,i) => t[a.id] = v[i] || 0);
+  const missing = order.filter(a => c[a.id] < t[a.id]).map(a => ({a, short: t[a.id] - c[a.id]}));
+  return {targets: t, missing, met: missing.length === 0};
+}
+function memberType(who, bs){
+  const m = S.members[who]; if (!m || !m.joinDay) return "full";
+  const be = ymd(addDays(bs, 13)); const b0 = ymd(bs);
+  if (m.joinDay < b0) return "full";
+  if (m.joinDay >= be) return "none";
+  return "pro";
+}
+function weekStatus(who, ws){
+  const bs = blockStart(ws); const type = memberType(who, bs);
+  if (type !== "full") return {type, req:null};
+  const p = passesIn(who, ws, 7); const req = reduceVec(WEEK_VEC, p.granted);
+  const k = countsIn(who, ws, 7); const a = assign(k.c, req);
+  const closed = Date.now() >= addDays(ws, 7).getTime();
+  return {type, req, ...k, ...a, passes:p, closed, goalTotal: req.reduce((s,x) => s+x, 0), missed: closed && !a.met && !p.pending};
+}
+function blockStatus(who, bs){
+  const type = memberType(who, bs); if (type === "none") return {type, req:null};
+  const p = passesIn(who, bs, 14);
+  let req, from = bs, n = 14;
+  if (type === "pro") { const jd = S.members[who].joinDay; const left = daysBetween(jd, ymd(addDays(bs, 13))); req = proratedVec(left); from = addDays(parse(jd), 1); n = left; }
+  else req = BLOCK_VEC;
+  if (!req) return {type:"none", req:null};
+  req = reduceVec(req, p.granted);
+  const k = countsIn(who, from, n); const a = assign(k.c, req);
+  const closed = Date.now() >= addDays(bs, 14).getTime();
+  const missedCats = AREAS.filter(x => k.c[x.id] < a.targets[x.id]).length;
+  return {type, req, ...k, ...a, passes:p, closed, missedCats, goalTotal: req.reduce((s,x) => s+x, 0), missed: closed && !a.met};
+}
+function costFor(bs){
+  const h = (S.settings?.history || []).filter(x => x.from <= ymd(bs)).sort((a,b) => a.from.localeCompare(b.from) || a.at - b.at).at(-1);
+  return h || {cost:0, mode:"flat"};
+}
+const costText = c => c.cost ? (c.mode === "per" ? `${money(c.cost)} per category missed` : `${money(c.cost)} flat`) : "Clowning only, no money";
+const oweFor = (c, missedCats) => c.mode === "per" ? c.cost * missedCats : c.cost;
+// Clowned: missed the last closed week (or last block) and haven't hit this week's goal yet.
+function clownInfo(who){
+  if (!isMember(who)) return null;
+  const lastW = addDays(monday(new Date()), -7);
+  const jd = S.members[who].joinDay || "0";
+  const reasons = [];
+  if (jd < ymd(lastW)) { const w = weekStatus(who, lastW); if (w.req && w.missed) reasons.push({kind:"week", key: ymd(lastW), text:`missed the week of ${fmtShort(lastW)}`}); }
+  const lastB = addDays(blockStart(new Date()), -14);
+  if (jd < ymd(addDays(lastB, 13))) { const b = blockStatus(who, lastB); if (b.req && b.missed && (b.type === "pro" || allMissed(lastB))) reasons.push({kind:"block", key: ymd(lastB), text:`missed the block ending ${fmtShort(addDays(lastB,13))}`}); }
+  if (!reasons.length) return null;
+  const cur = weekStatus(who, monday(new Date())); const curB = blockStatus(who, blockStart(new Date()));
+  const redeemed = cur.req ? cur.met : curB.req ? curB.met : false;
+  return redeemed ? null : {reasons, key: reasons[0].key};
+}
+function allMissed(bs){ const ps = memberIds().filter(id => memberType(id, bs) !== "none"); return ps.length > 0 && ps.every(id => blockStatus(id, bs).missed); }
+function weeksStreak(who){
+  let n = 0; let w = addDays(monday(new Date()), -7);
+  for (let i = 0; i < 60; i++) { const st = weekStatus(who, w); if (!st.req) { w = addDays(w, -7); continue; } if (!st.met) break; n++; w = addDays(w, -7); }
+  return n;
+}
+
+/* ================= pay-ups =================
+   Every 2 weeks, only if someone missed. Missers split their payment evenly among those who hit.
+   Everyone missed: no money moves. Late joiners can't collect until their first full block.
+   A block settles once its last cap/proof and pass votes are done.                           */
+function firstBlock(){ const js = memberIds().map(id => S.members[id].joinDay).filter(Boolean).sort(); return js[0] ? blockStart(parse(js[0])) : null; }
+function computeBlocks(){
+  const out = {blocks:[], transfers:[], current:null};
+  const fb = firstBlock(); if (!fb) return out;
+  const now = Date.now(); const today = parse(todayStr());
+  for (let bs = new Date(fb); ; bs = addDays(bs, 14)) {
+    const be = addDays(bs, 13);
+    const parts = memberIds().filter(id => memberType(id, bs) !== "none");
+    if (be >= today) { out.current = {bs, be, parts}; break; }
+    if (!parts.length) continue;
+    const res = parts.map(id => ({id, st: blockStatus(id, bs)}));
+    const openCaps = parts.reduce((n, id) => n + Array.from({length:14}, (_, i) => ymd(addDays(bs, i))).reduce((m, k) => m + entriesOf(id, k).filter(e => capInfo(id, k, e).open).length, 0), 0);
+    const pendingPasses = parts.reduce((n, id) => n + passesIn(id, bs, 14).pending, 0);
+    const ready = now >= addDays(be, 1).getTime() + H24 && !openCaps && !pendingPasses;
+    const c = costFor(bs);
+    const missers = res.filter(r => r.st.missed), hitters = res.filter(r => !r.st.missed && r.st.type === "full");
+    const blk = {bs, be, res, cost:c, missers, hitters, ready, openCaps, pendingPasses, everyoneMissed: missers.length === res.length, transfers:[]};
+    if (ready && missers.length && hitters.length && c.cost) {
+      missers.forEach(m => { const amt = oweFor(c, m.st.missedCats); hitters.forEach(h => blk.transfers.push({bk: ymd(bs), from:m.id, to:h.id, amount: amt/hitters.length, key:`${ymd(bs)}|${m.id}|${h.id}`})); });
+      out.transfers.push(...blk.transfers);
+    }
+    out.blocks.push(blk);
+  }
+  return out;
+}
+const isPaid = t => !!S.paid[t.to]?.got?.[t.key];
+
+/* ================= views ================= */
+const VIEWS = ["today","calendar","group","pot","wrapped"];
+let view = "today";
+function setView(v){
+  view = v;
+  VIEWS.forEach(x => { $("view-"+x).hidden = x !== v; $("tab-"+x).setAttribute("aria-selected", String(x === v)); });
+  if (v !== "wrapped") stopStoryAnim();
+  if (v !== "pot") stopJar();
+  try { localStorage.setItem("opb.trial.view", v); } catch {}
+  renderAll(); window.scrollTo(0,0);
+  if (v === "pot") jarBurst(16);
+}
+document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => setView(b.dataset.view));
+function renderAll(){
+  if (!S.me) S.me = "loading";
+  $("todayLabel").textContent = fmtLong(todayStr());
+  $("streakN").textContent = weeksStreak(S.me);
+  if (view === "today") renderToday();
+  if (view === "calendar") renderCalendar();
+  if (view === "group") renderGroup();
+  if (view === "pot") renderPot();
+  if (view === "wrapped") renderWrapped();
+  if ($("catSheet").open) renderCatSheet();
+  if ($("daySheet").open) renderDaySheet();
+}
+
+/* ---------- entry card ---------- */
+const REACTS = ["💪","🔥","🙏","👏"];
+const photoURL = p => p ? (p.url || ("/_blob/" + p.id)) : "";
+function entryHTML(e, date, who, opts = {}){
+  const a = AREA[e.area]; const label = labelOf(e); const mine = who === S.me;
+  const inGroup = mode !== "local" && isMember(who); const meIn = isMember(S.me);
+  const hidden = e.priv && !mine;
+  const counted = pickedIds(who, date).includes(e.id);
+  const bits = [];
+  if (opts.showWho) bits.push(`<span class="who" style="color:var(--fg)">${esc(nameOf(who))}</span>`);
+  bits.push(`<b>${esc(a.name)}</b>`);
+  if (date) bits.push(esc(fmtShort(date)));
+  if (!hidden && e.minutes) bits.push(`<span class="num">${esc(e.minutes)} min</span>`);
+  const badges = [];
+  if (counted) badges.push(`<span class="badge ok">Counts</span>`); else badges.push(`<span class="badge muted">Extra</span>`);
+  if (e.isNew) badges.push(`<span class="badge warn">New</span>`);
+  if (e.priv) badges.push(`<span class="badge muted">Private</span>`);
+  const ci = inGroup ? capInfo(who, date, e) : null;
+  if (ci) badges.push(({needproof:`<span class="badge bad">Capped · proof due ${esc(fmtWhen(ci.deadline))}</span>`, expired:`<span class="badge bad">No proof · doesn't count</span>`, proven:`<span class="badge ok">Proof posted</span>`})[ci.status] || (ci.n ? `<span class="badge warn">${ci.n} of ${ci.need} cap calls</span>` : ""));
+  const photos = [!hidden && e.photo && {p:e.photo, cap:"Photo"}, e.proof && e.proof.photo && {p:e.proof.photo, cap:"Proof"}].filter(Boolean);
+  let vote = "";
+  const dis = canWrite ? "" : "disabled";
+  if (ci && !mine && meIn && ci.windowOpen) vote = `<div class="vote-row"><button class="chipbtn cap" aria-pressed="${ci.mine}" data-cap="${esc(ci.key)}" ${dis}>${ci.mine ? "You called cap" : "Call cap"}</button><span>${ci.n} of ${ci.need} needed</span></div>`;
+  if (ci && !mine && meIn && !ci.cappable && !opts.compact) vote = `<div class="vote-row"><span>Prayer, silence and self-reflection can't be capped.</span></div>`;
+  if (ci && mine && ci.status === "needproof") vote = `<div class="vote-row"><button class="btn" style="padding:7px 12px;font-size:13px" data-proof="${esc(e.id)}" data-date="${esc(date)}">Add proof</button><span>Due ${esc(fmtWhen(ci.deadline))}, or this won't count.</span></div>`;
+  let social = "";
+  if (inGroup) {
+    const k = key3(who, date, e.id); const counts = {}; let myR = null;
+    memberIds().forEach(v => { const r = S.votes[v]?.react?.[k]; if (r) { counts[r] = (counts[r]||0)+1; if (v === S.me) myR = r; } });
+    const comments = memberIds().flatMap(v => (S.votes[v]?.cmt?.[k] || []).map(c => ({...c, by:v}))).sort((x,y) => x.at - y.at);
+    const canReact = !mine && meIn && canWrite;
+    const shown = REACTS.filter(r => canReact || counts[r]);
+    social = `<div class="social">${shown.map(r => `<button class="react ${myR===r?"on":""}" data-react="${esc(k)}" data-r="${r}" ${canReact?"":"disabled"} aria-label="React ${r}">${r}${counts[r]?`<span class="num">${counts[r]}</span>`:""}</button>`).join("")}
+      ${meIn && canWrite ? `<button class="react cmt-btn" data-cmtopen="${esc(k)}">Comment${comments.length?` <span class="num">${comments.length}</span>`:""}</button>` : ""}</div>
+      ${comments.length ? `<ul class="cmts">${comments.map(c => `<li><b>${esc(nameOf(c.by))}</b> ${esc(c.text)}</li>`).join("")}</ul>` : ""}
+      <form class="cmt-form" data-cmtform="${esc(k)}" hidden><input maxlength="140" placeholder="Say something" aria-label="Comment"><button class="btn" type="submit">Send</button></form>`;
+  }
+  const editable = mine && mode !== "loading" && !dayLocked(who, date);
+  return `<article class="entry" style="--c:var(--${a.id})"><div class="bar"></div>
+    <div class="body"><div class="meta">${bits.join("<span>·</span>")} ${badges.join(" ")}</div>
+      ${hidden ? `<div class="what priv">Private ${esc(a.name.toLowerCase())} check-off</div>` : `<div class="what">${esc(label)}${e.detail && !AREA[e.area].num ? ` · <span style="color:var(--muted);font-weight:500">${esc(e.detail)}</span>` : ""}</div><p class="sum">${esc(e.summary)}</p>`}
+      ${e.proof && e.proof.note ? `<div class="proofnote">${esc(e.proof.note)}</div>` : ""}
+      ${photos.length && !opts.noThumbs ? `<div class="thumbs">${photos.map(x => `<button data-lb="${esc(photoURL(x.p))}" data-lbcap="${esc(x.cap)}"><img src="${esc(photoURL(x.p))}" alt="${esc(x.cap)}" loading="lazy"></button>`).join("")}</div>` : ""}
+      ${vote}${social}</div>
+    <div class="acts">${editable ? `<button class="icon-btn" data-edit="${esc(e.id)}" data-date="${esc(date)}">Edit</button><button class="icon-btn danger" data-del="${esc(e.id)}" data-date="${esc(date)}">Delete</button>` : ""}</div>
+  </article>`;
+}
+function wire(root){
+  root.querySelectorAll("[data-edit]").forEach(b => b.onclick = () => { const e = entriesOf(S.me, b.dataset.date).find(x => x.id === b.dataset.edit); if (e) openSheet({entry:e, date:b.dataset.date}); });
+  root.querySelectorAll("[data-del]").forEach(b => b.onclick = () => {
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Sure?"; setTimeout(() => { if (b.isConnected) { b.dataset.armed = ""; b.textContent = "Delete"; } }, 3000); return; }
+    const d = b.dataset.date; const doc = myLogs()[d]; if (!doc || dayLocked(S.me, d)) return;
+    doc.entries = doc.entries.filter(x => x.id !== b.dataset.del); if (doc.picks) doc.picks = doc.picks.filter(x => x !== b.dataset.del);
+    if (!doc.entries.length) delete myLogs()[d];
+    persistDay(d); renderAll(); toast("Deleted");
+  });
+  const toggleMap = (field, k, val) => { const v = myVotes(); v[field] ||= {}; if (v[field][k] === val) delete v[field][k]; else v[field][k] = val; saveVotes(); renderAll(); };
+  root.querySelectorAll("[data-cap]").forEach(b => b.onclick = () => { const v = myVotes(); v.cap ||= {}; if (v.cap[b.dataset.cap]) delete v.cap[b.dataset.cap]; else v.cap[b.dataset.cap] = Date.now(); saveVotes(); renderAll(); });
+  root.querySelectorAll("[data-react]").forEach(b => b.onclick = () => toggleMap("react", b.dataset.react, b.dataset.r));
+  root.querySelectorAll("[data-pv]").forEach(b => b.onclick = () => toggleMap("pass", b.dataset.pv, b.dataset.val));
+  root.querySelectorAll("[data-cmtopen]").forEach(b => b.onclick = () => { const f = [...root.querySelectorAll("[data-cmtform]")].find(x => x.dataset.cmtform === b.dataset.cmtopen); if (f) { f.hidden = !f.hidden; if (!f.hidden) f.querySelector("input").focus(); } });
+  root.querySelectorAll("[data-cmtform]").forEach(f => f.onsubmit = ev => { ev.preventDefault(); const text = f.querySelector("input").value.trim(); if (!text) return; const v = myVotes(); v.cmt ||= {}; (v.cmt[f.dataset.cmtform] ||= []).push({text: text.slice(0,140), at: Date.now()}); saveVotes(); renderAll(); });
+  root.querySelectorAll("[data-proof]").forEach(b => b.onclick = () => openProof(b.dataset.date, b.dataset.proof));
+  root.querySelectorAll("[data-lb]").forEach(b => b.onclick = () => { $("lbImg").src = b.dataset.lb; $("lbCap").textContent = b.dataset.lbcap; $("lightbox").showModal(); });
+}
+$("lightbox").addEventListener("click", () => $("lightbox").close());
+
+/* ---------- today ---------- */
+function goalCard({title, sub, left, st, kind, gi}){
+  const t = todayStr(); const todayAreas = new Set(entriesOf(S.me, t).filter(e => pickedIds(S.me, t).includes(e.id)).map(e => e.area));
+  const req = [...st.req].sort((a,b) => b-a);
+  const hi = Math.max(...req), lo = Math.min(...req.filter(x => x > 0).concat([hi]));
+  const atHi = AREAS.filter(a => st.targets[a.id] === hi && st.c[a.id] >= hi).length, nHi = req.filter(x => x === hi).length;
+  const atLo = AREAS.filter(a => st.targets[a.id] > 0 && st.c[a.id] >= Math.min(lo, st.targets[a.id])).length, nPos = req.filter(x => x > 0).length;
+  const rows = [];
+  if (hi !== lo) {
+    rows.push({ok: atLo >= nPos, text: nPos === 5 ? `All 5 at least ${lo === 1 ? "once" : lo === 2 ? "twice" : lo + " times"}` : `${nPos} categories at least ${lo === 1 ? "once" : lo === 2 ? "twice" : lo+" times"}`, prog: `${Math.min(atLo, nPos)} of ${nPos}`});
+    rows.push({ok: atHi >= nHi, text: `Any ${nHi} at least ${hi === 2 ? "twice" : hi + " times"}`, prog: `${Math.min(atHi, nHi)} of ${nHi}`});
+  } else rows.push({ok: st.met, text: `${nPos === 5 ? "All 5" : nPos + " categories"} at least ${hi === 1 ? "once" : hi === 2 ? "twice" : hi+" times"}`, prog: `${Math.min(atLo,nPos)} of ${nPos}`});
+  rows.push({ok: st.total >= st.goalTotal, text: kind === "week" ? `${st.goalTotal} check-offs (2 a day max, so at least ${Math.ceil(st.goalTotal/2)} days)` : `${st.goalTotal} check-offs`, prog: `${Math.min(st.total, st.goalTotal)} of ${st.goalTotal}`});
+  const pct = Math.min(1, AREAS.reduce((s,a) => s + Math.min(st.c[a.id], st.targets[a.id]), 0) / Math.max(1, st.goalTotal));
+  const needTxt = st.met ? "" : st.missing.map(m => `${m.a.name}${m.short > 1 ? ` ×${m.short}` : ""}`);
+  const passNote = st.passes.granted ? ` · lowered by ${st.passes.granted} pass${st.passes.granted>1?"es":""}` : "";
+  return `<article class="goal g2 ${st.met?"met":""}">
+    <div class="g-head"><div class="g-title"><h3>${title}</h3><div class="rule">${sub}${passNote}</div></div>
+      <div class="g-left ${left<=2 && !st.met ? "urgent" : ""}"><b class="num">${left}</b><span>${left===1?"day left":"days left"}</span>${st.met ? `<em class="g-state ok">Goal hit</em>` : ""}</div></div>
+    <div class="g-bar"><i style="width:${pct*100}%"></i></div>
+    <div class="g-tiles">${AREAS.map(a => { const v = st.c[a.id], tg = st.targets[a.id]; const k = tg ? Math.min(1, v/tg) : 1; const done = v >= tg;
+      return `<button class="g-tile ${done?"done":""}" style="--c:var(--${a.id});--k:${Math.round(12+k*88)}%" data-goal="${gi}" data-cat="${a.id}" aria-label="${a.name}: ${v} of ${tg}. Tap to check off">
+        ${todayAreas.has(a.id) ? `<i class="g-today"></i>` : ""}<span class="g-check">${done ? (tg > 1 ? `${tg}×` : "✓") : ""}</span>
+        <span class="g-n num">${v}<small>/${tg}</small></span><span class="g-name">${a.name}</span></button>`; }).join("")}</div>
+    <ul class="g-req">${rows.map(r => `<li class="${r.ok?"ok":""}"><span class="g-dot">${r.ok?"✓":""}</span><span class="g-text">${r.text}</span><span class="g-prog num">${r.prog}</span></li>`).join("")}</ul>
+    ${needTxt ? `<div class="need">Still need: <b>${esc(listAnd(needTxt))}</b>${kind === "block" ? `. ${esc(blockHint())}` : ""}</div>` : ""}
+    ${kind === "block" ? moneyLine(st) : ""}
+  </article>`;
+}
+function blockHint(){
+  const bs = blockStart(new Date()); const inWeek2 = monday(new Date()) > bs;
+  return inWeek2 ? "It's week 2, so double up on different categories than last week." : "Tip: double up on 2 categories this week and 2 different ones next week.";
+}
+function moneyLine(st){
+  if (!isMember(S.me) || st.met) return "";
+  const c = costFor(blockStart(new Date())); if (!c.cost) return `<div class="g-money">Miss it and you get clowned.</div>`;
+  return `<div class="g-money">Miss it and you pay ${money(oweFor(c, st.missedCats || 1))}${c.mode === "per" ? ` (${money(c.cost)} for each category short)` : ""}, and you get clowned.</div>`;
+}
+let goalDefs = [];
+function renderToday(){
+  const now = new Date(); const ws = monday(now), bs = blockStart(now); const t = todayStr();
+  const wst = weekStatus(S.me, ws), bst = blockStatus(S.me, bs);
+  goalDefs = [];
+  let html = "";
+  if (wst.req) { goalDefs.push({start: ws, n: 7, title:"This week"}); html += goalCard({title:"This week", sub:`Ends Sunday night · ${fmtShort(ws)} – ${fmtShort(addDays(ws,6))}`, left: 7 - daysBetween(ymd(ws), t), st: wst, kind:"week", gi: goalDefs.length-1}); }
+  if (bst.req) { goalDefs.push({start: bs, n: 14, title: bst.type === "pro" ? "Your first block" : "This two-week block"}); html += goalCard({title: bst.type === "pro" ? "Your first block (prorated)" : "This two-week block", sub: bst.type === "pro" ? `One check-off per day left · ends ${fmtShort(addDays(bs,13))}` : `Ends every second Sunday · ${fmtShort(bs)} – ${fmtShort(addDays(bs,13))}`, left: 14 - daysBetween(ymd(bs), t), st: bst, kind:"block", gi: goalDefs.length-1}); }
+  if (!html) html = `<div class="empty">You joined on the last day of a block, so your goals start tomorrow.</div>`;
+  $("goals").innerHTML = html;
+  $("goals").querySelectorAll("[data-cat]").forEach(b => b.onclick = () => openCat(+b.dataset.goal, b.dataset.cat));
+  renderNudges(wst);
+  renderPicks();
+  const any = Object.keys(myLogs()).length;
+  $("todayExtra").innerHTML = !any && mode !== "demo" ? `<div class="empty" style="margin-top:14px">Nothing checked off yet. Tap any category above.<div><button class="btn ghost" id="demoBtn">See it with an example group</button></div></div>` : "";
+  const b = $("demoBtn"); if (b) b.onclick = startDemo;
+}
+function renderNudges(wst){
+  const n = []; const dow = (new Date().getDay()+6)%7; // Mon=0
+  const clown = clownInfo(S.me);
+  if (clown) n.push(`<div class="nudge clown"><span class="ico">🤡</span><div>You're clowned: you ${esc(clown.reasons.map(r => r.text).join(" and "))}. Hit this week's goal and it comes off.</div></div>`);
+  if (wst.req && !wst.met && dow >= 3) { const left = 7 - dow; n.push(`<div class="nudge warn"><span class="ico">⏰</span><div>Still missing ${esc(listAnd(wst.missing.map(m => m.a.name)))}. ${left} day${left===1?"":"s"} left.</div></div>`); }
+  const wk = ymd(monday(new Date()));
+  const from = memberIds().filter(v => v !== S.me && S.votes[v]?.nudge?.[`${S.me}|${wk}`]);
+  if (from.length) n.push(`<div class="nudge"><span class="ico">👉</span><div>${esc(listAnd(from.map(nameOf)))} nudged you. Get it done.</div></div>`);
+  const t = todayStr(); const mine = Object.keys(S.passes[S.me]?.req || {}).map(d => passInfo(S.me, d)).filter(p => p && p.status === "pending");
+  mine.forEach(p => n.push(`<div class="nudge"><span class="ico">🗳️</span><div>Your pass request is being voted on until ${esc(fmtWhen(p.closes))}: ${p.yes} yes, ${p.no} no.</div></div>`));
+  if (wst.req && wst.met) n.push(`<div class="nudge good"><span class="ico">🎉</span><div>Weekly goal hit. Keep going for the block.</div></div>`);
+  $("nudges").innerHTML = n.join("");
+}
+function renderPicks(){
+  const days = [todayStr(), ymd(addDays(new Date(), -1))].filter(k => entriesOf(S.me, k).length || k === todayStr());
+  let html = `<div class="sec-head"><h2>Today's 2</h2><span class="eyebrow">Only 2 a day count</span></div>`;
+  days.forEach(k => {
+    const list = [...entriesOf(S.me, k)].sort((a,b) => (a.createdAt||0) - (b.createdAt||0)); const ids = pickedIds(S.me, k); const locked = dayLocked(S.me, k);
+    if (k !== todayStr() && (locked || !list.length)) return;
+    if (k !== todayStr()) html += `<div class="cs-sub">Yesterday · open until ${esc(fmtWhen(dayCloseTs(k)))}</div>`;
+    html += list.length ? `<div class="picks">${list.map(e => `<div class="pick" style="--c:var(--${e.area})"><span class="bar"></span><div style="min-width:0"><div class="t">${esc(AREA[e.area].name)} · ${esc(labelOf(e))}</div><div class="s">${esc(e.summary)}</div></div>
+        <button class="chipbtn" aria-pressed="${ids.includes(e.id)}" data-pick="${esc(e.id)}" data-day="${k}" ${locked?"disabled":""}>${ids.includes(e.id) ? "Counts" : "Extra"}</button></div>`).join("")}</div>
+      <div class="lockrow"><span>${locked ? "Locked. These can't change now." : list.length > DAILY ? `Pick which ${DAILY} count. If you don't, your first ${DAILY} do.` : "Your first 2 check-offs count automatically."}</span>${!locked ? `<button class="btn ghost" style="padding:7px 12px;font-size:13px" data-lock="${k}">Lock in</button>` : ""}</div>`
+      : `<div class="empty">No check-offs today yet.</div>`;
+  });
+  $("picksSec").innerHTML = html;
+  $("picksSec").querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
+    const k = b.dataset.day, id = b.dataset.pick; const doc = myLogs()[k]; if (!doc || dayLocked(S.me, k)) return;
+    let ids = pickedIds(S.me, k);
+    if (ids.includes(id)) ids = ids.filter(x => x !== id); else { if (ids.length >= DAILY) ids = ids.slice(1); ids.push(id); }
+    doc.picks = ids; persistDay(k); renderAll();
+  });
+  $("picksSec").querySelectorAll("[data-lock]").forEach(b => b.onclick = () => {
+    const k = b.dataset.lock; const doc = myLogs()[k]; if (!doc) return;
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Lock for good?"; return; }
+    doc.picks = pickedIds(S.me, k); doc.locked = true; persistDay(k); renderAll(); toast("Locked in");
+  });
+}
+
+/* ---------- category sheet ---------- */
+let csGoal = 0, csArea = "physical";
+function openCat(gi, area){ csGoal = gi; csArea = area; renderCatSheet(); if (!$("catSheet").open) $("catSheet").showModal(); }
+function renderCatSheet(){
+  const g = goalDefs[csGoal] || {start: monday(new Date()), n: 7, title: "This week"}; const a = AREA[csArea]; const t = todayStr();
+  const k = countsIn(S.me, g.start, g.n);
+  const days = []; for (let i = g.n-1; i >= 0; i--) { const d = ymd(addDays(g.start, i)); if (d <= t) days.push(d); }
+  const byDay = days.map(d => [d, entriesOf(S.me, d).filter(e => e.area === csArea)]).filter(([,l]) => l.length);
+  const todayList = (byDay.find(([d]) => d === t) || [t, []])[1];
+  const photos = todayList.filter(e => e.photo).map(e => ({p:e.photo, tag: labelOf(e)}));
+  const canLog = openDays().length > 0;
+  $("csBody").innerHTML = `<div class="ds-head"><h2 id="csTitle"><span class="who">${esc(g.title)}</span>${esc(a.name)}</h2><button class="ds-nav" id="csClose" aria-label="Close">×</button></div>
+    <div class="cat-tabs" role="tablist">${AREAS.map(x => `<button role="tab" style="--c:var(--${x.id})" class="${k.c[x.id]?"has":""}" aria-selected="${x.id===csArea}" data-cs="${x.id}"><i></i><b>${k.c[x.id]}</b><span>${x.name}</span></button>`).join("")}</div>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 10px">${esc(a.blurb)}</p>
+    ${canLog ? `<button class="btn cs-log" style="--c:var(--${a.id})" id="csLog">Check off ${esc(a.name)}</button>` : `<div class="empty" style="margin-bottom:12px">Today is locked.</div>`}
+    <div class="cs-sub">Today</div>
+    ${photos.length ? `<div class="hero-photos">${photos.map(x => `<button data-lb="${esc(photoURL(x.p))}" data-lbcap="${esc(x.tag)}"><img src="${esc(photoURL(x.p))}" alt="${esc(x.tag)}"><span class="tag">${esc(x.tag)}</span></button>`).join("")}</div>` : ""}
+    <div class="entries">${todayList.length ? todayList.map(e => entryHTML(e, t, S.me, {noThumbs:true, compact:true})).join("") : `<div class="empty">No ${esc(a.name)} today yet.</div>`}</div>
+    ${byDay.filter(([d]) => d !== t).length ? `<div class="cs-sub">Earlier</div><div class="entries">${byDay.filter(([d]) => d !== t).flatMap(([d,l]) => l.map(e => entryHTML(e, d, S.me, {compact:true}))).join("")}</div>` : ""}`;
+  wire($("csBody"));
+  $("csBody").querySelectorAll("[data-cs]").forEach(b => b.onclick = () => { csArea = b.dataset.cs; renderCatSheet(); });
+  $("csClose").onclick = () => $("catSheet").close();
+  const lg = $("csLog"); if (lg) lg.onclick = () => openSheet({area: csArea});
+}
+$("catSheet").addEventListener("click", e => { if (e.target === $("catSheet")) $("catSheet").close(); });
+
+/* ---------- calendar + day sheet ---------- */
+let calMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1), selDay = todayStr(), calWho = null, dsArea = null;
+$("calPrev").onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()-1, 1); renderCalendar(); };
+$("calNext").onclick = () => { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1); renderCalendar(); };
+$("calToday").onclick = () => { calMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1); renderCalendar(); };
+$("calLegend").innerHTML = AREAS.map(a => `<span style="--c:var(--${a.id})"><i></i>${a.name}</span>`).join("") + `<span><b style="color:var(--ok)">✓</b> week goal hit</span><span>🤡 week missed</span>`;
+function renderCalendar(){
+  const people = [S.me, ...memberIds().filter(id => id !== S.me)];
+  if (!calWho || !people.includes(calWho)) calWho = S.me;
+  $("calMembers").innerHTML = people.length > 1 ? people.map(id => `<button class="chipbtn" aria-pressed="${id===calWho}" data-who="${esc(id)}">${esc(nameOf(id))}</button>`).join("") : "";
+  $("calMembers").querySelectorAll("[data-who]").forEach(b => b.onclick = () => { calWho = b.dataset.who; renderCalendar(); });
+  $("calTitle").textContent = calMonth.toLocaleDateString(undefined,{month:"long", year:"numeric"});
+  const t = todayStr(); const start = monday(calMonth); const last = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 0);
+  let html = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"].map(d => `<div class="dow">${d.slice(0,1)}<span class="sr">${d.slice(1)}</span></div>`).join("") + `<div class="dow">W</div>`;
+  for (let w = start; w <= last; w = addDays(w, 7)) {
+    for (let i = 0; i < 7; i++) {
+      const d = addDays(w, i); const k = ymd(d); const l = entriesOf(calWho, k); const ids = pickedIds(calWho, k);
+      const on = l.filter(e => ids.includes(e.id)).map(e => e.area); const hasPhoto = l.some(e => (e.photo && (!e.priv || calWho === S.me)) || e.proof?.photo);
+      const pass = passInfo(calWho, k)?.status === "granted";
+      const cls = ["day"]; if (d.getMonth() !== calMonth.getMonth()) cls.push("out"); if (k > t) cls.push("future"); if (k === t) cls.push("today"); if (pass) cls.push("pass");
+      html += `<button class="${cls.join(" ")}" data-day="${k}" aria-label="${esc(fmtLong(k))}, ${l.length} check-offs"><span class="d">${d.getDate()}</span>${hasPhoto?`<i class="cam"></i>`:""}
+        <span class="stripes">${AREAS.map(a => `<i class="${on.includes(a.id)?"on":""}" style="--c:var(--${a.id})"></i>`).join("")}</span></button>`;
+    }
+    const ws = weekStatus(calWho, w);
+    const mark = !ws.req || !ws.closed ? "·" : ws.met ? "✓" : ws.missed ? "🤡" : "·";
+    html += `<div class="wk ${ws.met && ws.closed ? "ok" : "no"}">${mark}</div>`;
+  }
+  $("cal").innerHTML = html;
+  $("cal").querySelectorAll("[data-day]").forEach(b => b.onclick = () => openDay(b.dataset.day));
+}
+function openDay(day){ selDay = day; dsArea = null; renderDaySheet(); if (!$("daySheet").open) $("daySheet").showModal(); }
+function renderDaySheet(){
+  const l = entriesOf(calWho, selDay); const mine = calWho === S.me; const pi = passInfo(calWho, selDay);
+  const by = Object.fromEntries(AREAS.map(a => [a.id, l.filter(e => e.area === a.id)]));
+  if (!dsArea) dsArea = (AREAS.find(a => by[a.id].length) || AREAS[0]).id;
+  const a = AREA[dsArea]; const list = by[dsArea];
+  const photos = list.flatMap(e => [e.photo && (!e.priv || mine) && {p:e.photo, tag: labelOf(e)}, e.proof?.photo && {p:e.proof.photo, tag:"Proof"}].filter(Boolean));
+  const nextOk = ymd(addDays(parse(selDay),1)) <= todayStr(); const open = mine && !dayLocked(S.me, selDay) && selDay <= todayStr();
+  $("dsBody").innerHTML = `<div class="ds-head"><button class="ds-nav" id="dsPrev" aria-label="Previous day">‹</button>
+      <h2 id="dsTitle">${!mine ? `<span class="who">${esc(nameOf(calWho))}</span>` : ""}${esc(fmtLong(selDay))}</h2>
+      <button class="ds-nav" id="dsNext" aria-label="Next day" ${nextOk?"":"disabled"}>›</button><button class="ds-nav" id="dsClose" aria-label="Close">×</button></div>
+    <div class="cat-tabs" role="tablist">${AREAS.map(x => `<button role="tab" style="--c:var(--${x.id})" class="${by[x.id].length?"has":""}" aria-selected="${x.id===dsArea}" data-cat="${x.id}"><i></i><b>${by[x.id].length}</b><span>${x.name}</span></button>`).join("")}</div>
+    ${pi ? `<div class="card" style="margin-bottom:12px"><div class="spread"><h3>Pass ${pi.status}</h3><span class="badge ${pi.status==="granted"?"ok":pi.status==="denied"?"bad":"warn"}">${pi.yes} yes · ${pi.no} no</span></div><p>${esc(pi.req.reason)}</p></div>` : ""}
+    ${photos.length ? `<div class="hero-photos">${photos.map(x => `<button data-lb="${esc(photoURL(x.p))}" data-lbcap="${esc(x.tag)}"><img src="${esc(photoURL(x.p))}" alt="${esc(x.tag)}"><span class="tag">${esc(x.tag)}</span></button>`).join("")}</div>` : ""}
+    <div class="entries">${list.length ? list.map(e => entryHTML(e, selDay, calWho, {noThumbs:true})).join("") : `<div class="empty">No ${esc(a.name)} this day.${open ? `<div><button class="btn ghost" id="dsLog">Check off ${esc(a.name)}</button></div>` : ""}</div>`}</div>
+    ${list.length && open ? `<div style="margin-top:12px"><button class="btn ghost" id="dsLog">Add another</button></div>` : ""}
+    ${mine && selDay <= todayStr() ? `<p style="font-size:12.5px;color:var(--muted);margin-top:12px">${dayLocked(S.me, selDay) ? "This day is locked." : `Open until ${esc(fmtWhen(dayCloseTs(selDay)))}.`}</p>` : ""}`;
+  wire($("dsBody"));
+  $("dsBody").querySelectorAll("[data-cat]").forEach(b => b.onclick = () => { dsArea = b.dataset.cat; renderDaySheet(); });
+  $("dsClose").onclick = () => $("daySheet").close();
+  $("dsPrev").onclick = () => stepDay(-1); $("dsNext").onclick = () => stepDay(1);
+  const lg = $("dsLog"); if (lg) lg.onclick = () => openSheet({area: dsArea, date: selDay});
+}
+function stepDay(n){ const d = addDays(parse(selDay), n); if (ymd(d) > todayStr()) return; if (d.getMonth() !== calMonth.getMonth()) { calMonth = new Date(d.getFullYear(), d.getMonth(), 1); renderCalendar(); } openDay(ymd(d)); }
+$("daySheet").addEventListener("click", e => { if (e.target === $("daySheet")) $("daySheet").close(); });
+
+/* ---------- group ---------- */
+function renderGroup(){
+  const host = $("groupBody");
+  if (mode === "local" || mode === "loading") {
+    host.innerHTML = `<div class="card"><h3>${mode === "loading" ? "Connecting…" : "Groups need you signed in"}</h3><p>${mode === "loading" ? "One moment." : "Open this page signed in to Claude to create or join a group."}</p>${mode === "local" ? `<div style="margin-top:10px"><button class="btn ghost" id="demoBtn2">See an example group</button></div>` : ""}</div>`;
+    const b = $("demoBtn2"); if (b) b.onclick = startDemo; return;
+  }
+  const ids = memberIds(); const me = S.me; const owner = isOwner || mode === "demo";
+  const curC = costFor(blockStart(new Date())); const t = todayStr(); const dow = (new Date().getDay()+6)%7;
+  let html = "";
+  // setup / header
+  if (!S.settings) {
+    html += owner ? `<div class="card" style="margin-bottom:18px"><h3>Create your group</h3><p>Up to ${MAX_GROUP} friends. Everyone sees these stakes before they join.</p>${settingsForm({name:"", cost:10, mode:"flat"}, "Create group")}</div>`
+                  : `<div class="card"><h3>No group yet</h3><p>The person who shared this with you needs to create the group first.</p></div>`;
+    host.innerHTML = html; wireSettings(true); return;
+  }
+  const full = ids.length >= MAX_GROUP;
+  html += `<section><div class="card"><div class="spread"><h3 style="font-family:var(--f-display);font-size:20px">${esc(S.settings.name || "Our group")}</h3><span class="badge muted">${ids.length} of ${MAX_GROUP}</span></div>
+    <div class="stakes"><span>Miss a week: get clowned</span><span>Miss a block: ${esc(costText(curC))}</span></div>
+    ${!isMember(me) ? (full ? `<p>This group is full.</p>` : `<p>Joining now gives you a prorated goal for the rest of this block: one check-off per day left, starting tomorrow. You start collecting from others in your first full block.</p><div style="margin-top:10px"><button class="btn" id="joinBtn" ${canWrite?"":"disabled"}>Join the group</button></div>`) : ""}
+    ${owner ? `<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Change stakes</summary><p>Changes show in the feed and start with the next two-week block.</p>${settingsForm({name:S.settings.name, cost: curC.cost, mode: curC.mode}, "Save for next block")}</details>` : ""}
+  </div></section>`;
+  // board
+  if (ids.length) {
+    html += `<section><div class="sec-head"><h2>Board</h2><span class="eyebrow">Week of ${fmtShort(monday(new Date()))}</span></div><div class="card">`;
+    html += ids.map(id => {
+      const w = weekStatus(id, monday(new Date())); const b = blockStatus(id, blockStart(new Date())); const cl = clownInfo(id);
+      const atRisk = w.req && !w.met && dow >= 5;
+      let st = !w.req ? (b.req ? `<span class="badge muted">Prorated block · ${b.total}/${b.goalTotal}</span>` : `<span class="badge muted">Starts tomorrow</span>`)
+        : w.met ? `<span class="badge ok">Week hit</span>` : atRisk ? `<span class="badge bad">At risk</span>` : `<span class="badge warn">${w.total} of ${w.goalTotal}</span>`;
+      const nk = `${id}|${ymd(monday(new Date()))}`; const nudged = !!S.votes[me]?.nudge?.[nk];
+      const roasts = cl ? memberIds().flatMap(v => (S.votes[v]?.roast?.[`${id}|${cl.key}`] || []).map(r => ({...r, by:v}))) : [];
+      return `<div class="board-row"><div><div class="nm">${cl ? "🤡 " : ""}${esc(nameOf(id))}</div><div class="sub">${weeksStreak(id)} weeks hit in a row · block ${b.req ? `${b.total}/${b.goalTotal}` : "–"}${cl ? ` · ${esc(cl.reasons[0].text)}` : ""}</div></div>
+        <div class="row" style="justify-content:flex-end">${st}${atRisk && id !== me && isMember(me) ? `<button class="chipbtn" data-nudge="${esc(nk)}" aria-pressed="${nudged}" ${canWrite?"":"disabled"}>${nudged ? "Nudged" : "Nudge"}</button>` : ""}</div>
+        ${cl ? `<div class="roasts">${roasts.length ? `<ul>${roasts.map(r => `<li><b>${esc(nameOf(r.by))}:</b> ${esc(r.text)}</li>`).join("")}</ul>` : ""}${id !== me && isMember(me) && canWrite ? `<form class="cmt-form" data-roast="${esc(`${id}|${cl.key}`)}"><input maxlength="100" placeholder="Leave a roast caption" aria-label="Roast caption"><button class="btn" type="submit">Roast</button></form>` : ""}</div>` : ""}</div>`;
+    }).join("");
+    html += `</div><p style="font-size:12.5px;color:var(--muted);margin:8px 2px 0">You get a private nudge Thursday. From Saturday the group can see who's at risk. Weeks close Sunday night, and a clown comes off when you hit the next week's goal.</p></section>`;
+  }
+  // passes
+  const reqs = ids.flatMap(id => Object.keys(S.passes[id]?.req || {}).map(d => ({id, d, i: passInfo(id, d)}))).filter(r => r.d >= ymd(addDays(new Date(), -14))).sort((a,b) => (a.i.status === "pending" ? 0 : 1) - (b.i.status === "pending" ? 0 : 1) || b.d.localeCompare(a.d));
+  html += `<section><div class="sec-head"><h2>Passes</h2>${isMember(me) ? `<button class="btn ghost" id="passBtn" style="padding:7px 12px;font-size:13px" ${canWrite?"":"disabled"}>Request a pass</button>` : ""}</div>`;
+  html += reqs.length ? `<div class="entries">${reqs.map(r => { const i = r.i; const own = r.id === me;
+    return `<div class="card"><div class="spread"><div><span class="who">${esc(nameOf(r.id))}</span> <span style="color:var(--muted)">· ${esc(fmtDow(r.d))}</span></div>
+      <span class="badge ${i.status==="granted"?"ok":i.status==="denied"?"bad":"warn"}">${i.status==="pending" ? `Voting until ${esc(fmtWhen(i.closes))}` : i.status === "granted" ? "Granted" : "Denied"}</span></div>
+      <p style="color:var(--fg)">${esc(i.req.reason)}</p>
+      <div class="vote-row">${!own && isMember(me) && i.status === "pending" ? `<button class="chipbtn" aria-pressed="${i.mine==="yes"}" data-pv="${esc(i.key)}" data-val="yes" ${canWrite?"":"disabled"}>Yes</button><button class="chipbtn cap" aria-pressed="${i.mine==="no"}" data-pv="${esc(i.key)}" data-val="no" ${canWrite?"":"disabled"}>No</button>` : ""}<span>${i.yes} yes · ${i.no} no${i.status === "pending" ? " · only votes cast count, a tie is a no" : ""}</span></div></div>`; }).join("")}</div>`
+    : `<div class="empty">No pass requests in the last two weeks.</div>`;
+  html += `</section>`;
+  // feed
+  html += `<section><div class="sec-head"><h2>Feed</h2><span class="eyebrow">Last 14 days</span></div><div class="entries">${feedHTML()}</div></section>`;
+  host.innerHTML = html;
+  wire(host); wireSettings(false);
+  const jb = $("joinBtn"); if (jb) jb.onclick = joinGroup;
+  const pb = $("passBtn"); if (pb) pb.onclick = openPass;
+  host.querySelectorAll("[data-nudge]").forEach(b => b.onclick = () => { const v = myVotes(); v.nudge ||= {}; if (v.nudge[b.dataset.nudge]) return; v.nudge[b.dataset.nudge] = Date.now(); saveVotes(); renderAll(); toast("Nudge sent"); });
+  host.querySelectorAll("[data-roast]").forEach(f => f.onsubmit = ev => { ev.preventDefault(); const text = f.querySelector("input").value.trim(); if (!text) return; const v = myVotes(); v.roast ||= {}; (v.roast[f.dataset.roast] ||= []).push({text: text.slice(0,100), at: Date.now()}); saveVotes(); renderAll(); });
+}
+let feedLimit = 30;
+function feedHTML(){
+  const ids = memberIds(); const since = ymd(addDays(new Date(), -13)); const t = todayStr(); const items = [];
+  ids.forEach(id => Object.entries(S.logs[id] || {}).forEach(([d, doc]) => { if (d >= since && d <= t) doc.entries.forEach(e => items.push({at: e.createdAt || parse(d).getTime(), html: entryHTML(e, d, id, {showWho:true})})); }));
+  // perfect weeks + clowns from the last closed week
+  const lw = addDays(monday(new Date()), -7); const closeTs = addDays(lw, 7).getTime();
+  const perfect = ids.filter(id => { const w = weekStatus(id, lw); return w.req && w.met; });
+  if (perfect.length) items.push({at: closeTs, html: `<div class="feed-note party"><div class="when">Week of ${fmtShort(lw)} closed</div>🎉 Perfect week for <b>${esc(listAnd(perfect.map(nameOf)))}</b>.</div>`});
+  const clowns = ids.filter(id => { const w = weekStatus(id, lw); return w.req && w.missed; });
+  if (clowns.length) items.push({at: closeTs + 1, html: `<div class="feed-note"><div class="when">Week of ${fmtShort(lw)} closed</div>🤡 <b>${esc(listAnd(clowns.map(nameOf)))}</b> missed the weekly goal. Roasts are open on the board.</div>`});
+  ids.forEach(id => Object.entries(S.passes[id]?.req || {}).forEach(([d, r]) => { if ((r.at||0) >= parse(since).getTime()) items.push({at: r.at, html: `<div class="feed-note"><div class="when">${esc(fmtWhen(r.at))}</div>🗳️ <b>${esc(nameOf(id))}</b> asked for a pass on ${esc(fmtDow(d))}: “${esc(r.reason)}”</div>`}); }));
+  (S.settings?.history || []).slice(1).forEach(h => { if ((h.at||0) >= parse(since).getTime()) items.push({at: h.at, html: `<div class="feed-note"><div class="when">${esc(fmtWhen(h.at))}</div>⚙️ Stakes change to <b>${esc(costText(h))}</b> starting the block of ${esc(fmtShort(h.from))}.</div>`}); });
+  ids.forEach(id => { if (S.members[id].joinedAt >= parse(since).getTime()) items.push({at: S.members[id].joinedAt, html: `<div class="feed-note"><div class="when">${esc(fmtWhen(S.members[id].joinedAt))}</div>👋 <b>${esc(nameOf(id))}</b> joined the group.</div>`}); });
+  items.sort((a,b) => b.at - a.at);
+  if (!items.length) return `<div class="empty">Nothing yet. Check-offs from everyone in the group show up here.</div>`;
+  return items.slice(0, feedLimit).map(x => x.html).join("") + (items.length > feedLimit ? `<button class="btn ghost" id="moreFeed">Show more</button>` : "");
+}
+document.addEventListener("click", e => { if (e.target.closest("#moreFeed")) { feedLimit += 30; renderGroup(); } });
+function settingsForm(v, label){
+  return `<div class="settings-grid" style="margin-top:12px">
+    <div class="field" style="grid-column:1/-1"><label for="sName">Group name</label><input id="sName" value="${esc(v.name)}" placeholder="e.g. Sunday Boys"></div>
+    <div class="field"><label for="sCost">Cost of a miss ($)</label><input id="sCost" type="number" min="0" step="1" value="${esc(v.cost)}"><span class="help">$0 means clowning only</span></div>
+    <div class="field"><label for="sMode">Charged</label><select id="sMode"><option value="flat" ${v.mode==="flat"?"selected":""}>Flat per missed block</option><option value="per" ${v.mode==="per"?"selected":""}>Per category missed</option></select></div>
+  </div><div style="margin-top:10px"><button class="btn" id="saveSettings">${label}</button></div>`;
+}
+function wireSettings(isNew){
+  const b = $("saveSettings"); if (!b) return;
+  b.onclick = async () => {
+    const entry = {cost: Math.max(0, +$("sCost").value || 0), mode: $("sMode").value, at: Date.now(), from: isNew ? ymd(blockStart(new Date())) : ymd(addDays(blockStart(new Date()), 14))};
+    const next = {name: $("sName").value.trim() || "Our group", history: [...(S.settings?.history || []), entry]};
+    if (!isNew) { const last = S.settings.history.at(-1); if (last.from === entry.from) next.history = [...S.settings.history.slice(0,-1), entry]; }
+    S.settings = next;
+    if (mode === "cloud") await guard(db.doc("group/settings").set(next), "the group settings");
+    if (isNew) await joinGroup(true);
+    renderAll(); toast(isNew ? "Group created" : "Saved. Starts next block.");
+  };
+}
+async function joinGroup(silent){
+  if (memberIds().length >= MAX_GROUP) { toast("This group is full."); return; }
+  const rec = {joinedAt: Date.now(), joinDay: todayStr()};
+  // the creator who sets up on a block's first day gets the full block
+  if (silent === true && todayStr() === ymd(blockStart(new Date()))) rec.joinDay = ymd(addDays(blockStart(new Date()), -1));
+  S.members[S.me] = rec;
+  if (mode === "cloud") { subscribeLogs(S.me); if (!(await guard(db.doc(`members/${S.me}`).set(rec), "your membership"))) delete S.members[S.me]; }
+  renderAll(); if (silent !== true) toast("You're in.");
+}
+
+/* ---------- pass sheet ---------- */
+function openPass(){
+  const ws = monday(new Date()); const opts = [];
+  for (let i = 0; i < 7; i++) { const d = ymd(addDays(ws, i)); if (d >= todayStr() || !dayLocked(S.me, d)) if (!S.passes[S.me]?.req?.[d]) opts.push(d); }
+  $("passDate").innerHTML = opts.map(d => `<option value="${d}">${esc(fmtDow(d))}${d === todayStr() ? " (today)" : ""}</option>`).join("");
+  $("passReason").value = ""; validatePass(); $("passSheet").showModal();
+}
+function validatePass(){ const ok = $("passDate").value && $("passReason").value.trim().length >= 6; $("passSave").disabled = !ok; return ok; }
+["passReason","passDate"].forEach(id => $(id).addEventListener("input", validatePass));
+$("passCancel").onclick = () => $("passSheet").close();
+$("passForm").addEventListener("submit", e => {
+  e.preventDefault(); if (!validatePass()) return;
+  const p = (S.passes[S.me] ||= {}); p.req ||= {}; p.req[$("passDate").value] = {reason: $("passReason").value.trim(), at: Date.now()};
+  savePasses(); $("passSheet").close(); renderAll(); toast("Pass request sent. Voting closes in 24 hours.");
+});
+
+/* ---------- photos ---------- */
+async function shrink(file, max = 1600){
+  try { const bmp = await createImageBitmap(file); const s = Math.min(1, max / Math.max(bmp.width, bmp.height)); const c = document.createElement("canvas"); c.width = Math.round(bmp.width*s); c.height = Math.round(bmp.height*s); c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height); return await new Promise(r => c.toBlob(b => r(b || file), "image/jpeg", .82)); } catch { return file; }
+}
+async function uploadPhoto(file){
+  if (!file) return null;
+  if (mode === "demo") return {id:"demo", url: URL.createObjectURL(file)};
+  if (!assets) { toast("Photos aren't available here."); return null; }
+  try { const r = await assets.upload(await shrink(file)); return {id:r.id, url:r.url}; } catch { toast("The photo didn't upload."); return null; }
+}
+function previewFile(input, img){ const f = input.files && input.files[0]; if (f) { img.src = URL.createObjectURL(f); img.hidden = false; } else { img.hidden = true; img.removeAttribute("src"); } }
+
+/* ---------- check-off sheet ---------- */
+const sheet = $("sheet"); let editing = null, curArea = "physical", keepPhoto = null, curDay = todayStr();
+$("areaSeg").innerHTML = AREAS.map(a => `<button type="button" style="--c:var(--${a.id})" data-a="${a.id}" aria-pressed="false">${a.name}</button>`).join("");
+$("areaSeg").querySelectorAll("button").forEach(b => b.onclick = () => setArea(b.dataset.a));
+function setArea(id, actId){
+  curArea = id; const a = AREA[id];
+  $("areaSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.a === id)));
+  $("fActivity").innerHTML = a.acts.map(x => `<option value="${x.id}">${esc(x.label)}</option>`).join("");
+  $("fActivity").value = actId || a.acts[0].id;
+  $("fDetailLabel").innerHTML = `${esc(a.detail)} <span style="font-weight:400;color:var(--muted)">(optional)</span>`;
+  $("fDetail").type = a.num ? "number" : "text"; $("fDetail").inputMode = a.num ? "numeric" : "text";
+  $("privField").hidden = !a.priv; if (!a.priv) $("fPriv").checked = false;
+  setActivity();
+}
+function setActivity(){ $("otherField").hidden = $("fActivity").value !== "other"; validate(); }
+$("fActivity").onchange = setActivity;
+function validate(){
+  const w = words($("fSummary").value); const sc = $("sumCount");
+  sc.className = "count " + (w >= MIN_WORDS ? "ok" : "no"); sc.textContent = w >= MIN_WORDS ? "✓ Good" : `${MIN_WORDS - w} more word${MIN_WORDS-w===1?"":"s"}`;
+  const ok = w >= MIN_WORDS && !($("fActivity").value === "other" && !$("fOther").value.trim()) && !dayLocked(S.me, curDay);
+  $("saveBtn").disabled = !ok; return ok;
+}
+["fSummary","fOther"].forEach(id => $(id).addEventListener("input", validate));
+$("fPhoto").addEventListener("change", () => { keepPhoto = null; previewFile($("fPhoto"), $("fPhotoPrev")); $("fPhotoClear").hidden = !$("fPhoto").files.length; });
+$("fPhotoClear").onclick = () => { $("fPhoto").value = ""; keepPhoto = null; previewFile($("fPhoto"), $("fPhotoPrev")); $("fPhotoClear").hidden = true; };
+function renderDayPick(){
+  const days = editing ? [editing.date] : openDays();
+  if (!days.includes(curDay)) curDay = days[0] || todayStr();
+  $("dayPick").innerHTML = days.map(d => `<button type="button" class="chipbtn" aria-pressed="${d===curDay}" data-d="${d}">${d === todayStr() ? "Today" : "Yesterday"}</button>`).join("");
+  $("dayPick").querySelectorAll("[data-d]").forEach(b => b.onclick = () => { curDay = b.dataset.d; renderDayPick(); validate(); });
+  $("dayHelp").textContent = curDay === todayStr() ? "You have until the end of tomorrow to log today, unless the week closes first." : `Yesterday is open until ${fmtWhen(dayCloseTs(curDay))}.`;
+}
+function openSheet({area, date, entry} = {}){
+  const days = openDays();
+  if (!entry && !days.length) { toast("Today is locked."); return; }
+  editing = entry ? {id: entry.id, date} : null;
+  curDay = entry ? date : (date && days.includes(date) ? date : days[0]);
+  $("sheetTitle").textContent = entry ? "Edit check-off" : "Check off";
+  setArea(entry ? entry.area : (area || curArea), entry?.activity);
+  $("fOther").value = entry?.other || ""; $("fSummary").value = entry?.summary || ""; $("fDetail").value = entry ? (entry.minutes || entry.detail || "") : "";
+  $("fNew").checked = !!entry?.isNew; $("fPriv").checked = !!entry?.priv;
+  $("fPhoto").value = ""; keepPhoto = entry?.photo || null; $("photoField").hidden = mode === "local";
+  if (keepPhoto) { $("fPhotoPrev").src = photoURL(keepPhoto); $("fPhotoPrev").hidden = false; $("fPhotoClear").hidden = false; } else { $("fPhotoPrev").hidden = true; $("fPhotoClear").hidden = true; }
+  renderDayPick(); validate(); $("saveBtn").textContent = entry ? "Save" : "Check off";
+  sheet.showModal(); setTimeout(() => $("fSummary").focus(), 50);
+}
+const closeSheet = () => { if (sheet.open) sheet.close(); };
+$("cancelBtn").onclick = closeSheet;
+sheet.addEventListener("click", e => { if (e.target === sheet) closeSheet(); });
+$("logForm").addEventListener("submit", async e => {
+  e.preventDefault(); if (!validate()) return;
+  const a = AREA[curArea]; const date = curDay; const L = myLogs();
+  const doc = (L[date] ||= {date, entries:[]});
+  const prev = editing ? doc.entries.find(x => x.id === editing.id) : null;
+  const entry = {id: editing ? editing.id : uid(), area: curArea, activity: $("fActivity").value, summary: $("fSummary").value.trim(), createdAt: prev?.createdAt || Date.now()};
+  if (entry.activity === "other") entry.other = $("fOther").value.trim();
+  const det = $("fDetail").value.trim(); if (det) { if (a.num) { const m = parseInt(det, 10); if (m > 0) entry.minutes = Math.min(m, 1440); } else entry.detail = det.slice(0, 80); }
+  if ($("fNew").checked) entry.isNew = true;
+  if (a.priv && $("fPriv").checked) entry.priv = true;
+  if (prev?.proof) entry.proof = prev.proof;
+  const file = $("fPhoto").files && $("fPhoto").files[0];
+  if (file) { $("saveBtn").disabled = true; $("saveBtn").textContent = "Uploading…"; const p = await uploadPhoto(file); if (p) entry.photo = p; } else if (keepPhoto) entry.photo = keepPhoto;
+  doc.entries = editing ? doc.entries.map(x => x.id === entry.id ? entry : x) : [...doc.entries, entry];
+  persistDay(date); const was = editing; closeSheet(); renderAll();
+  const n = doc.entries.length;
+  toast(was ? "Updated" : n > DAILY && !Array.isArray(doc.picks) ? `Checked off. That's ${n} today, only your first 2 count unless you pick.` : "Checked off. 1% better.");
+});
+
+/* ---------- proof ---------- */
+let proofFor = null;
+function openProof(date, id){ proofFor = {date, id}; $("pPhoto").value = ""; $("pNote").value = ""; previewFile($("pPhoto"), $("pPhotoPrev")); $("proofSave").disabled = true; $("proofSave").textContent = "Submit proof"; $("proofSheet").showModal(); }
+$("pPhoto").addEventListener("change", () => { previewFile($("pPhoto"), $("pPhotoPrev")); $("proofSave").disabled = !$("pPhoto").files.length; });
+$("proofCancel").onclick = () => $("proofSheet").close();
+$("proofForm").addEventListener("submit", async e => {
+  e.preventDefault(); const f = $("pPhoto").files[0]; if (!f || !proofFor) return;
+  $("proofSave").disabled = true; $("proofSave").textContent = "Uploading…";
+  const p = await uploadPhoto(f); if (!p) { $("proofSave").disabled = false; $("proofSave").textContent = "Submit proof"; return; }
+  const ent = entriesOf(S.me, proofFor.date).find(x => x.id === proofFor.id);
+  if (ent) { ent.proof = {photo: p, note: $("pNote").value.trim(), at: Date.now()}; persistDay(proofFor.date); }
+  $("proofSheet").close(); renderAll(); toast("Proof posted. It counts again.");
+});
+
+/* ---------- pay-ups ---------- */
+let shownTotal = 0, lastTotal = null;
+function renderPot(){
+  const host = $("potBody");
+  if (mode === "local" || mode === "loading" || !S.settings) {
+    $("jarAmt").textContent = "$0"; $("jarSub").textContent = mode === "local" ? "Groups need you signed in." : "Create a group on the Group tab first."; $("jarStats").innerHTML = "";
+    host.innerHTML = mode === "local" ? `<section><div class="card"><h3>No group</h3><p>Open this page signed in to Claude.</p><div style="margin-top:10px"><button class="btn ghost" id="demoBtn3">See an example group</button></div></div></section>` : "";
+    const b = $("demoBtn3"); if (b) b.onclick = startDemo; startJar(0); return;
+  }
+  const M = computeBlocks(); const cur = M.current; const c = cur ? costFor(cur.bs) : costFor(blockStart(new Date()));
+  const rows = cur ? cur.parts.map(id => ({id, st: blockStatus(id, cur.bs)})) : [];
+  const onLine = rows.filter(r => !r.st.met).reduce((s, r) => s + oweFor(c, r.st.missedCats), 0);
+  const settled = M.transfers.reduce((s,t) => s + t.amount, 0);
+  $("jarSub").textContent = cur ? `If the block ended now · ${costText(c)}` : "";
+  $("jarStats").innerHTML = `<span><b>${money(settled)}</b>paid out so far</span><span><b>${rows.length}</b>in this block</span><span><b>${cur ? 14 - daysBetween(ymd(cur.bs), todayStr()) : 0}</b>days left</span>`;
+  countTo(onLine); if (lastTotal !== null && onLine > lastTotal) jarBurst(10); lastTotal = onLine; startJar(onLine);
+  let html = "";
+  if (cur) {
+    html += `<section><div class="sec-head"><h2>This block</h2><span class="eyebrow">${fmtShort(cur.bs)}–${fmtShort(cur.be)}</span></div><div class="card">`;
+    html += rows.length ? rows.map(r => `<div class="mrow"><div><span class="who">${esc(nameOf(r.id))}</span> <span style="color:var(--muted);font-size:12.5px">· ${r.st.total} of ${r.st.goalTotal}${r.st.type === "pro" ? " · prorated" : ""}</span></div>
+        <span class="badge ${r.st.met?"ok":"warn"}">${r.st.met ? "Goal hit" : c.cost ? `Owes ${money(oweFor(c, r.st.missedCats))} if it ends now` : "Clown if it ends now"}</span>
+        <div class="mbars">${AREAS.map(a => `<i style="--c:var(--${a.id})" title="${a.name}: ${r.st.c[a.id]} of ${r.st.targets[a.id]}"><b style="width:${r.st.targets[a.id] ? Math.min(1, r.st.c[a.id]/r.st.targets[a.id])*100 : 100}%"></b></i>`).join("")}</div></div>`).join("")
+      : `<p style="margin:0">Nobody is in this block yet.</p>`;
+    html += `</div><p style="font-size:12.5px;color:var(--muted);margin:8px 2px 0">Goal: any 4 categories at least 3 times and the 5th at least twice, 14 check-offs. Missers split their payment among everyone who hit. If everyone misses, no money moves.</p></section>`;
+  }
+  const done = M.blocks.slice().reverse();
+  html += `<section><div class="sec-head"><h2>Pay-ups</h2><span class="eyebrow">Every 2 weeks</span></div>`;
+  html += done.length ? done.map(b => `<div class="card" style="margin-bottom:8px"><div class="spread"><h3>${fmtShort(b.bs)} – ${fmtShort(b.be)}</h3><span class="badge ${b.ready?"muted":"warn"}">${b.ready ? "Settled" : "Waiting"}</span></div>
+      ${!b.ready ? `<p>${b.openCaps ? `${b.openCaps} capped check-off${b.openCaps===1?"":"s"} waiting on proof. ` : ""}${b.pendingPasses ? `${b.pendingPasses} pass vote${b.pendingPasses===1?"":"s"} still open. ` : ""}${!b.openCaps && !b.pendingPasses ? "Settles 24 hours after the block closes, once cap calls are done." : "Pay-ups wait for the results."}</p>`
+        : !b.missers.length ? `<p>Everyone hit their goal. Nobody pays.</p>` : b.everyoneMissed || !b.hitters.length ? `<p>Everyone missed, so no money moves and everyone gets clowned.</p>` : !b.cost.cost ? `<p>${esc(listAnd(b.missers.map(m => nameOf(m.id))))} missed. Clowning only, no money.</p>`
+        : `<div class="ledger" style="margin-top:6px">${b.transfers.map(t => { const paid = isPaid(t); return `<div class="lrow"><span><span class="who">${esc(nameOf(t.from))}</span> ${t.from===S.me?"pay":"pays"} <span class="who">${esc(nameOf(t.to))}</span></span>
+            <span class="row"><span class="money">${money(t.amount)}</span>${t.to === S.me ? `<button class="chipbtn" aria-pressed="${paid}" data-got="${esc(t.key)}" ${canWrite||mode==="demo"?"":"disabled"}>${paid ? "Received ✓" : "Mark received"}</button>` : `<span class="badge ${paid?"ok":"muted"}">${paid?"Paid":"Not paid yet"}</span>`}</span></div>`; }).join("")}</div>`}
+    </div>`).join("") : `<div class="empty">No finished blocks yet.</div>`;
+  html += `<p style="font-size:12.5px;color:var(--muted);margin:8px 2px 0">The app keeps score. Pay over Venmo, and the person receiving marks it.</p></section>`;
+  host.innerHTML = html;
+  host.querySelectorAll("[data-got]").forEach(b => b.onclick = () => { const p = (S.paid[S.me] ||= {}); p.got ||= {}; if (p.got[b.dataset.got]) delete p.got[b.dataset.got]; else p.got[b.dataset.got] = true; savePaid(); renderAll(); });
+}
+function countTo(target){ const from = shownTotal; const t0 = performance.now(); const step = now => { const k = Math.min(1, (now-t0)/900); const e = 1 - Math.pow(1-k, 3); shownTotal = from + (target-from)*e; $("jarAmt").textContent = money(Math.round(shownTotal)); if (k < 1) requestAnimationFrame(step); else { shownTotal = target; $("jarAmt").textContent = money(target); } }; requestAnimationFrame(step); }
+let jarRaf = 0, coins = [], pile = 0, jarTarget = 0;
+function jarBurst(n){ for (let i = 0; i < n; i++) coins.push({x: Math.random(), y: -Math.random()*0.9, v: 0, r: .028 + Math.random()*.012, spin: Math.random()*6, settled:false}); }
+function roundRect(ctx, x, y, w, h, r){ ctx.beginPath(); ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r); ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath(); }
+function startJar(total){
+  const c = costFor(blockStart(new Date())); jarTarget = Math.min(1, total / Math.max(1, (c.cost || 10) * 6));
+  if (jarRaf) return;
+  const cv = $("jarCanvas"); const ctx = cv.getContext("2d"); const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const frame = () => {
+    const r = cv.getBoundingClientRect(); const dpr = Math.min(2, devicePixelRatio||1);
+    if (cv.width !== Math.round(r.width*dpr) || cv.height !== Math.round(r.height*dpr)) { cv.width = Math.round(r.width*dpr); cv.height = Math.round(r.height*dpr); }
+    const w = cv.width, h = cv.height; ctx.clearRect(0,0,w,h);
+    const gold = getComputedStyle(document.documentElement).getPropertyValue("--spiritual").trim() || "#E2B23C";
+    const g = ctx.createRadialGradient(w*.78, h*.75, 0, w*.78, h*.75, h*.9); g.addColorStop(0, "rgba(226,178,60,.28)"); g.addColorStop(1, "transparent"); ctx.fillStyle = g; ctx.fillRect(0,0,w,h);
+    const jw = Math.min(w*.36, h*.5), jh = h*.56, jx = w - jw - w*.07, jy = h - jh - h*.12;
+    pile += (jarTarget - pile) * (reduce ? 1 : .04); const fillH = jh * (.06 + .8*pile);
+    ctx.save(); roundRect(ctx, jx, jy, jw, jh, jw*.18); ctx.clip();
+    ctx.fillStyle = gold; ctx.globalAlpha = .9; ctx.fillRect(jx, jy + jh - fillH, jw, fillH);
+    ctx.globalAlpha = .35; ctx.fillStyle = "#fff"; for (let yy = jy + jh - fillH + 6*dpr; yy < jy + jh; yy += 9*dpr) ctx.fillRect(jx, yy, jw, 1.2*dpr);
+    ctx.restore(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = "rgba(255,255,255,.55)"; ctx.lineWidth = 2.5*dpr; roundRect(ctx, jx, jy, jw, jh, jw*.18); ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,.25)"; roundRect(ctx, jx + jw*.12, jy - 10*dpr, jw*.76, 12*dpr, 5*dpr); ctx.fill();
+    const surface = jy + jh - fillH;
+    coins.forEach(c2 => { const tx = jx + jw*(.2 + .6*c2.x);
+      if (!c2.settled) { c2.v += .0009 * h / 60 * (reduce ? 50 : 1); c2.y += c2.v / h * 60; c2.spin += .2; c2.px = c2.px ?? (w*.15 + c2.x*w*.4); c2.px += (tx - c2.px) * .05; if (c2.y*h >= surface - c2.r*h) c2.settled = true; }
+      const cy = c2.y*h, cx = c2.px ?? tx, rr = c2.r*Math.min(w,h)*1.4;
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(Math.max(.15, Math.abs(Math.cos(c2.spin))), 1); ctx.beginPath(); ctx.arc(0,0,rr,0,Math.PI*2); ctx.fillStyle = gold; ctx.fill(); ctx.lineWidth = 1.5*dpr; ctx.strokeStyle = "rgba(255,255,255,.7)"; ctx.stroke();
+      ctx.fillStyle = "rgba(20,26,46,.6)"; ctx.font = `700 ${rr*1.1}px sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("$", 0, rr*.05); ctx.restore(); });
+    coins = coins.filter(c2 => !c2.settled);
+    if (!reduce && Math.random() < .012) jarBurst(1);
+    jarRaf = requestAnimationFrame(frame);
+  };
+  jarRaf = requestAnimationFrame(frame);
+}
+function stopJar(){ cancelAnimationFrame(jarRaf); jarRaf = 0; }
+
+/* ---------- wrapped ---------- */
+let slides = [], slideIx = 0, storyYear = new Date().getFullYear();
+$("yearSel").onchange = () => { storyYear = +$("yearSel").value; slideIx = 0; renderWrapped(); };
+$("tapNext").onclick = () => go(1); $("tapPrev").onclick = () => go(-1);
+document.addEventListener("keydown", e => { if ($("daySheet").open && !sheet.open) { if (e.key === "ArrowLeft") stepDay(-1); if (e.key === "ArrowRight") stepDay(1); return; } if (view !== "wrapped" || sheet.open) return; if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); });
+function go(d){ slideIx = Math.max(0, Math.min(slides.length-1, slideIx + d)); drawSlide(); }
+function yearStats(who, y){
+  const es = Object.entries(S.logs[who] || {}).flatMap(([d, doc]) => doc.entries.map(e => ({...e, date:d}))).filter(e => e.date.startsWith(y+"-"));
+  const cnt = (area, act) => es.filter(e => e.area === area && (!act || e.activity === act)).length;
+  let weeks = 0, perfect = 0, run = 0, bestRun = 0, clowned = 0;
+  const limit = new Date(Math.min(new Date(y,11,31), addDays(monday(new Date()), -1)));
+  for (let w = monday(new Date(y,0,1)); w <= limit; w = addDays(w,7)) { const st = weekStatus(who, w); if (!st.req) continue; weeks++; if (st.met) { perfect++; run++; bestRun = Math.max(bestRun, run); } else { run = 0; if (st.missed) clowned++; } }
+  const months = Array(12).fill(0); es.forEach(e => months[+e.date.slice(5,7)-1]++);
+  const capsOnYou = es.filter(e => isMember(who) && capInfo(who, e.date, e).capped).length;
+  const passesDenied = Object.keys(S.passes[who]?.req || {}).filter(d => d.startsWith(y+"-") && passInfo(who, d)?.status === "denied").length;
+  let paid = 0, won = 0; computeBlocks().transfers.filter(t => t.bk.startsWith(y+"-")).forEach(t => { if (t.from === who) paid += t.amount; if (t.to === who) won += t.amount; });
+  const buddies = {}; es.filter(e => e.area === "social" && e.detail).forEach(e => { const k = e.detail.trim(); buddies[k] = (buddies[k]||0)+1; });
+  const topBuddy = Object.entries(buddies).sort((a,b) => b[1]-a[1])[0];
+  const newPeople = es.filter(e => e.area === "social" && (e.isNew || e.activity === "newperson")).length;
+  const yeses = es.filter(e => e.isNew); const bestYes = yeses.sort((a,b) => b.summary.length - a.summary.length)[0];
+  return {es, cnt, weeks, perfect, bestRun, clowned, months, capsOnYou, passesDenied, paid, won, topBuddy, newPeople, yeses, bestYes,
+    minutesMoved: es.filter(e => e.area === "physical").reduce((s,e) => s + (e.minutes||0), 0), silence: es.filter(e => e.area === "mental" && e.activity === "silence").reduce((s,e) => s + (e.minutes||0), 0),
+    prayerDays: new Set(es.filter(e => e.activity === "prayer").map(e => e.date)).size};
+}
+function renderWrapped(){
+  const years = new Set([new Date().getFullYear(), ...Object.keys(myLogs()).map(k => +k.slice(0,4))]); const ys = [...years].sort((a,b) => b-a);
+  if (!years.has(storyYear)) storyYear = ys[0];
+  $("yearSel").innerHTML = ys.map(y => `<option value="${y}" ${y===storyYear?"selected":""}>${y}</option>`).join("");
+  const Y = yearStats(S.me, storyYear); const now = new Date(); const sofar = storyYear === now.getFullYear();
+  $("storyNote").textContent = sofar ? `${storyYear} so far. The full story lands at year end.` : `Your full ${storyYear}.`;
+  slides = [];
+  if (!Y.es.length) slides.push({accent:"#9fb4ff", html:`<div class="kick">${storyYear} Wrapped</div><div class="h">Your year is still unwritten.</div><p>Check off your first thing and this is where it adds up.</p>`});
+  else {
+    const mIx = Y.months.indexOf(Math.max(...Y.months));
+    slides.push({accent:"#ffd36b", html:`<div class="kick">Your year</div><div class="huge num">${Y.es.length}</div><div class="h">check-offs.</div><p>${Y.perfect} perfect week${Y.perfect===1?"":"s"}, a best run of ${Y.bestRun} goal${Y.bestRun===1?"":"s"} in a row, and ${new Date(2000,mIx,1).toLocaleDateString(undefined,{month:"long"})} was your best month.</p>`});
+    const sorted = [...AREAS].sort((a,b) => Y.cnt(b.id) - Y.cnt(a.id)); const maxA = Y.cnt(sorted[0].id) || 1; const low = sorted.at(-1);
+    slides.push({accent:`var(--${sorted[0].id})`, html:`<div class="kick">Your categories</div><div class="h">Strongest: ${esc(sorted[0].name)}. ${Y.cnt(low.id) < Y.cnt(sorted[0].id) ? `You and ${esc(low.name)} need to talk.` : ""}</div>
+      <div class="abars">${AREAS.map(a => `<div class="abar" style="--c:var(--${a.id})"><span>${a.name}</span><span class="track"><i style="width:${Y.cnt(a.id)/maxA*100}%"></i></span><span class="v">${Y.cnt(a.id)}</span></div>`).join("")}</div>
+      <p style="margin-top:10px">${Math.round(Y.minutesMoved/60)} hours moved · ${Y.silence} minutes in silence · ${Y.prayerDays} days in prayer</p>`});
+    slides.push({accent:"var(--social)", html:`<div class="kick">Your people</div><div class="huge num">${Y.newPeople}</div><div class="h">new ${Y.newPeople===1?"person":"people"} met.</div><p>${Y.topBuddy ? `You spent the most time with ${esc(Y.topBuddy[0])} (${Y.topBuddy[1]} hangouts).` : "Add who you were with to see your top buddy."}</p>`});
+    slides.push({accent:"#7ef0b8", html:`<div class="kick">Your yeses</div><div class="huge num">${Y.yeses.length}</div><div class="h">new thing${Y.yeses.length===1?"":"s"} tried.</div>${Y.bestYes ? `<div class="quote">“${esc(Y.bestYes.summary)}”</div>` : ""}`});
+    if (isMember(S.me)) slides.push({accent:"#ff8a8a", html:`<div class="kick">Your shame</div><div class="h">🤡 ×${Y.clowned}</div><p>${Y.capsOnYou} cap${Y.capsOnYou===1?"":"s"} called on you, ${Y.passesDenied} pass${Y.passesDenied===1?"":"es"} denied, ${money(Y.paid)} paid${Y.won ? `, and ${money(Y.won)} collected` : ""}.</p>`});
+    const used = Y.months.map((v,i) => [v,i]).filter(([v]) => v > 0);
+    if (used.length > 1) { const [f, fi] = used[0], [l, li] = used.at(-1); slides.push({accent:"#ffb38a", html:`<div class="kick">Your growth</div><div class="h">${new Date(2000,fi,1).toLocaleDateString(undefined,{month:"long"})}: ${f} → ${new Date(2000,li,1).toLocaleDateString(undefined,{month:"long"})}: ${l}</div><p>${l >= f ? "You finished stronger than you started." : "The start was strong. Bring that energy back."}</p>`}); }
+    if (memberIds().length > 1) {
+      const st = memberIds().map(id => ({id, y: yearStats(id, storyYear)}));
+      const most = st.slice().sort((a,b) => b.y.perfect - a.y.perfect)[0], clown = st.slice().sort((a,b) => b.y.clowned - a.y.clowned)[0], earner = st.slice().sort((a,b) => b.y.won - a.y.won)[0];
+      slides.push({accent:"#ffd36b", html:`<div class="kick">Group awards</div><div class="chips" style="flex-direction:column;align-items:flex-start;gap:8px"><span>🏆 Most Consistent: ${esc(nameOf(most.id))} (${most.y.perfect} perfect weeks)</span><span>🤡 Head Clown: ${esc(nameOf(clown.id))} (${clown.y.clowned})</span><span>💰 Biggest Earner: ${esc(nameOf(earner.id))} (${money(earner.y.won)})</span></div>`});
+    }
+    const q = Y.es.filter(e => !e.priv && words(e.summary) >= 6).sort((a,b) => b.summary.length - a.summary.length)[0];
+    if (q) slides.push({accent:`var(--${q.area})`, html:`<div class="kick">Your best note</div><div class="quote">“${esc(q.summary)}”</div><p>${esc(fmtLong(q.date))}</p>`});
+  }
+  slideIx = Math.min(slideIx, slides.length-1); drawSlide(); startStoryAnim();
+}
+function drawSlide(){ const s = slides[slideIx]; $("storyBars").innerHTML = slides.map((_,i) => `<i class="${i<=slideIx?"on":""}"></i>`).join(""); $("slideHost").innerHTML = `<div class="slide" style="--wrap-accent:${s.accent}">${s.html}</div>`; $("storyPos").textContent = `${slideIx+1} / ${slides.length}`; storyAccent = s.accent; }
+let raf = 0, storyAccent = "#9fb4ff";
+function resolveColor(c){ if (!c.startsWith("var(")) return c; return getComputedStyle(document.documentElement).getPropertyValue(c.slice(4,-1)).trim() || "#9fb4ff"; }
+function startStoryAnim(){
+  cancelAnimationFrame(raf); const cv = $("storyBg"); const ctx = cv.getContext("2d"); const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const frame = t => { const r = cv.getBoundingClientRect(); const dpr = Math.min(2, devicePixelRatio||1); if (cv.width !== Math.round(r.width*dpr)) { cv.width = Math.round(r.width*dpr); cv.height = Math.round(r.height*dpr); }
+    const w = cv.width, h = cv.height; ctx.clearRect(0,0,w,h); const col = resolveColor(storyAccent);
+    [[.2,.25,.55],[.85,.7,.6],[.55,1.05,.5]].forEach(([x,y,s],i) => { const k = reduce ? 0 : t/1000; const cx = (x + Math.sin(k*.25+i*2)*.08)*w, cy = (y + Math.cos(k*.2+i)*.06)*h, rad = s*Math.max(w,h); const g = ctx.createRadialGradient(cx,cy,0,cx,cy,rad); g.addColorStop(0, col); g.addColorStop(1, "transparent"); ctx.globalAlpha = i===0 ? .38 : .22; ctx.fillStyle = g; ctx.fillRect(0,0,w,h); });
+    ctx.globalAlpha = 1; if (!reduce) raf = requestAnimationFrame(frame); };
+  raf = requestAnimationFrame(frame);
+}
+function stopStoryAnim(){ cancelAnimationFrame(raf); }
+
+/* ---------- example group (never saved) ---------- */
+function makeDemo(){
+  let seed = 11; const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647; const pick = a => a[Math.floor(rnd()*a.length)];
+  const T = {gym:"Push day, bench and dips, felt strong today.", sports:"Pickup basketball for an hour with the guys.", eat:"Cooked chicken and rice instead of takeout.", sleep:"In bed by 10:45, phone stayed in the kitchen.",
+    silence:"Fifteen minutes with no phone, noticed how restless I was.", mreflect:"Journaled about why work stress follows me home.", realconvo:"Talked about fear of failure and what success means.",
+    reflect:"Thought about where I'm impatient with family.", bible:"Read slowly and the part about rest stuck with me.", prayer:"Prayed for my parents and for patience.", space:"Walked with no music and just listened.",
+    hangout:"Got tacos and talked about his new job.", newperson:"Met someone at church, talked photography and coffee.", reading:"Thirty pages and underlined the part on identity.", creative:"Sketched for twenty minutes.",
+    buildskill:"Practiced Spanish on the train for half an hour.", project:"Built the login screen for my side project.", instrument:"Guitar chord changes G to C.", writing:"Wrote 500 words about my grandfather.", painting:"Started a small watercolor.", photo:"Shot golden hour downtown."};
+  const people = ["Maya","Jordan","Priya","Luis","Hannah","Daniel","Grace","Noah"];
+  const D = blank(); D.me = "me"; D.names = {d1:"Jordan (example)", d2:"Priya (example)", d3:"Sam (example)", d4:"Luis (example)"};
+  const now = new Date(); const bs = blockStart(now); const startDay = addDays(bs, -14*5);
+  D.settings = {name:"Example group", history:[{cost:20, mode:"flat", from: ymd(startDay), at: startDay.getTime()}, {cost:10, mode:"per", from: ymd(bs), at: Date.now() - 20*864e5}]};
+  const crew = [["me",.95,2],["d1",.97,2],["d2",.7,1],["d3",.88,2]];
+  crew.forEach(([id, rate, perDay], ci) => {
+    D.members[id] = {joinedAt: startDay.getTime() - (5-ci)*3600e3, joinDay: ymd(addDays(startDay, -1))};
+    const L = D.logs[id] = {};
+    for (let d = new Date(startDay); d <= now; d = addDays(d, 1)) {
+      if (rnd() > rate) continue; const k = ymd(d); const n = perDay + (rnd() < .25 ? 1 : 0); const entries = [];
+      for (let i = 0; i < n; i++) { const a = pick(AREAS); const act = pick(a.acts.filter(x => x.id !== "other"));
+        const e = {id:`${id}${k}${i}`, area:a.id, activity:act.id, summary:T[act.id], createdAt: d.getTime() + (9+i*3)*3600e3};
+        if (a.num) e.minutes = 15 + Math.floor(rnd()*60); else if (a.id === "social") e.detail = pick(people); else if (a.id === "spiritual" && act.id === "bible") e.detail = pick(["Psalm 23","Romans 8","John 15"]);
+        if (rnd() < .12) e.isNew = true; if (a.priv && rnd() < .3) e.priv = true;
+        entries.push(e); }
+      L[k] = {date:k, entries, locked: k < ymd(addDays(now,-1))};
+    }
+  });
+  // late joiner this block
+  const jd = ymd(addDays(bs, 3)); if (jd < todayStr()) { D.members.d4 = {joinedAt: parse(jd).getTime() + 15*3600e3, joinDay: jd}; D.logs.d4 = {}; for (let d = addDays(parse(jd),1); d <= now; d = addDays(d,1)) { const k = ymd(d); const a = pick(AREAS); D.logs.d4[k] = {date:k, entries:[{id:`d4${k}`, area:a.id, activity:a.acts[0].id, summary:T[a.acts[0].id], createdAt: d.getTime()+10*3600e3}]}; } }
+  const t = todayStr(); const hr = 3600e3;
+  // a cap in progress and a pass up for a vote
+  const recent = id => Object.keys(D.logs[id]).filter(k => k <= t).sort().at(-1);
+  const pd = recent("d2"); const pe = pd && D.logs.d2[pd].entries.find(e => !actOf(e.area, e.activity).nocap);
+  if (pe) { pe.createdAt = Date.now() - 6*hr; D.votes.d1 = {cap:{[key3("d2", pd, pe.id)]: Date.now() - 2*hr}}; D.votes.d3 = {cap:{[key3("d2", pd, pe.id)]: Date.now() - hr}}; }
+  D.passes.d3 = {req:{[t]:{reason:"Flying to Denver for my cousin's wedding, traveling all day.", at: Date.now() - 3*hr}}};
+  D.votes.d1 = {...(D.votes.d1||{}), pass:{[`d3|${t}`]:"yes"}};
+  const md = recent("me"); if (md) { const e0 = D.logs.me[md].entries[0]; const k = key3("me", md, e0.id); D.votes.d1 = {...D.votes.d1, react:{[k]:"💪"}, cmt:{[k]:[{text:"Let's go!", at: Date.now()-hr}]}}; D.votes.d2 = {react:{[k]:"🔥"}}; }
+  const lw = ymd(addDays(monday(now), -7)); D.votes.d1.roast = {[`d2|${lw}`]:[{text:"Priya said she'd start Monday. Which Monday?", at: Date.now()-30*hr}]};
+  (D.votes.d3 ||= {}).nudge = {[`d2|${ymd(monday(now))}`]: Date.now() - 2*hr};
+  return D;
+}
+
+/* ---------- boot ---------- */
+try { const v = localStorage.getItem("opb.trial.view"); if (v && VIEWS.includes(v)) view = v; } catch {}
+S.me = "loading"; S.logs.loading = {};
+setView(view);
+initStore();
+})();
+</script>
