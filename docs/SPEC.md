@@ -1,6 +1,6 @@
 # 1% Better App Spec
 
-Nov 9, 2026 · Yehuda
+Nov 9, 2026
 
 Groups of up to 6 friends hold each other to getting 1% better every day across five categories: Physical, Mental, Spiritual, Social and Skill/Art. Missing a weekly goal gets you clowned, and missing a two-week goal costs you money.
 
