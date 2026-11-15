@@ -1,3 +1,13 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F3F5F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="1% Better">
 <title>1% Better Trial</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -371,7 +381,44 @@ details.card summary{cursor:pointer;font-weight:700}
 .priv{font-style:italic;color:var(--muted)}
 .stakes{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .stakes span{background:var(--sunk);border-radius:999px;padding:4px 10px;font-size:12.5px;font-weight:600}
+
+/* mobile app polish */
+html{-webkit-text-size-adjust:100%}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+button,label,summary,select{touch-action:manipulation}
+/* Keep content clear of the notch, and clear of the tab bar plus the Check off button. */
+.wrap{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(164px + env(safe-area-inset-bottom,0px))}
+/* iOS zooms the page when a focused field is under 16px. */
+.field input,.field select,.field textarea,.cmt-form input,.wrapped-ctl select{font-size:16px}
+/* Thumb-sized targets. */
+.icon-btn{min-height:36px;padding:6px 10px}
+.chipbtn{min-height:36px}
+.react{min-height:34px}
+.ds-nav{width:40px;height:40px}
+.cal-nav h2{font-size:20px;white-space:nowrap}
+.cal-nav .btn{padding:8px 12px}
+.toast{bottom:calc(146px + env(safe-area-inset-bottom,0px))}
+/* Hover styles stick after a tap on touch screens. */
+@media (hover:none){
+  .g-tile:hover{box-shadow:inset 0 0 0 1.5px color-mix(in srgb,var(--c) 35%,transparent)}
+  .g-tile.done:hover{box-shadow:none}
+  .log-btn:hover{border-color:var(--line)}
+  .goal .ac:hover{border-color:transparent}
+  .icon-btn:hover{border-color:transparent;color:var(--muted)}
+  .icon-btn.danger:hover{color:var(--physical)}
+}
+.fab{position:fixed;z-index:21;right:max(16px,env(safe-area-inset-right,0px),calc(50vw - 304px));bottom:calc(80px + env(safe-area-inset-bottom,0px));display:inline-flex;align-items:center;gap:8px;border:0;border-radius:999px;padding:14px 20px 14px 16px;background:var(--accent);color:var(--accent-ink);font-weight:800;font-size:15.5px;box-shadow:0 6px 18px color-mix(in srgb,var(--accent) 35%,transparent),0 2px 4px rgba(0,0,0,.12);transition:transform .1s}
+.fab:active{transform:scale(.96)}
+.fab svg{width:20px;height:20px}
+.fab[hidden]{display:none}
+.tabs button{position:relative}
+.tabs button.has-dot::after{content:"";position:absolute;top:5px;left:calc(50% + 9px);width:8px;height:8px;border-radius:50%;background:var(--physical);box-shadow:0 0 0 2px var(--surface)}
+.nudge .go{margin-top:8px;padding:7px 12px;font-size:13px}
+#picksSec{margin-top:0}
+#picksSec + section{margin-top:22px}
 </style>
+</head>
+<body>
 
 <div class="wrap">
   <div id="banner" class="banner" hidden></div>
@@ -385,12 +432,12 @@ details.card summary{cursor:pointer;font-weight:700}
 
   <main id="view-today" class="view">
     <div class="nudges" id="nudges"></div>
+    <section id="picksSec"></section>
     <section>
       <div class="sec-head"><h2>Your goals</h2></div>
-      <p class="g-intro">Tap a category to check off what you did. Only 2 check-offs a day count, so spread them out.</p>
+      <p class="g-intro">Tap a category to see what you've done in it. Only 2 check-offs a day count, so spread them out.</p>
       <div class="goals" id="goals"></div>
     </section>
-    <section id="picksSec"></section>
     <div id="todayExtra"></div>
   </main>
 
@@ -441,13 +488,15 @@ details.card summary{cursor:pointer;font-weight:700}
 
 <nav class="tabs" role="tablist" aria-label="Sections">
   <div class="in">
-    <button role="tab" id="tab-today" aria-selected="true" data-view="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Today</button>
+    <button role="tab" id="tab-today" aria-selected="true" data-view="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.4 2.4 4.6-4.9"/></svg>Today</button>
     <button role="tab" id="tab-calendar" aria-selected="false" data-view="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendar</button>
     <button role="tab" id="tab-group" aria-selected="false" data-view="group"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5M14.5 14.6c2.6-.6 5 .8 6 4.4"/></svg>Group</button>
     <button role="tab" id="tab-pot" aria-selected="false" data-view="pot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7h10l1.5 3.5c1.5 3.5.5 9.5-6.5 9.5S4 14 5.5 10.5z"/><path d="M9 4h6M12 12v4M10.5 13h2.5"/></svg>Pay-ups</button>
     <button role="tab" id="tab-wrapped" aria-selected="false" data-view="wrapped"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4.2 4 1.1 6L12 16l-4.9 3 1.1-6L4 9l5.5-.5z"/></svg>Wrapped</button>
   </div>
 </nav>
+
+<button class="fab" id="fab" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Check off</button>
 
 <dialog id="sheet">
   <form class="sheet" id="logForm" method="dialog" novalidate>
@@ -673,6 +722,19 @@ function passesIn(who, start, n){
   for (let i = 0; i < n; i++) { const p = passInfo(who, ymd(addDays(start, i))); if (p?.status === "granted") granted++; if (p?.status === "pending") pending++; }
   return {granted, pending};
 }
+// Other members' pass requests that are still open and that you haven't voted on.
+function pendingVotes(){
+  if (mode === "local" || mode === "loading" || !isMember(S.me) || !canWrite) return [];
+  return others(S.me).flatMap(id => Object.keys(S.passes[id]?.req || {}).map(d => ({id, d, i: passInfo(id, d)})))
+    .filter(r => r.i && r.i.status === "pending" && !r.i.mine).sort((a,b) => a.i.closes - b.i.closes);
+}
+// Your own check-offs that were capped and still need proof before the 24 hours run out.
+function proofDue(){
+  if (mode === "local" || mode === "loading" || !isMember(S.me)) return [];
+  const out = [];
+  for (let i = 0; i < 21; i++) { const d = ymd(addDays(new Date(), -i)); entriesOf(S.me, d).forEach(e => { const ci = capInfo(S.me, d, e); if (ci.status === "needproof") out.push({d, e, ci}); }); }
+  return out.sort((a,b) => a.ci.deadline - b.ci.deadline);
+}
 // Counted check-offs per category: only each day's 2, minus capped entries without proof.
 function countsIn(who, start, n){
   const c = Object.fromEntries(AREAS.map(a => [a.id, 0])); let total = 0, days = 0;
@@ -810,8 +872,17 @@ function setView(v){
   if (v === "pot") jarBurst(16);
 }
 document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => setView(b.dataset.view));
+$("fab").onclick = () => openSheet({});
+// The Check off button floats over the screens where you'd log something, when there's a day still open.
+function renderChrome(){
+  $("fab").hidden = !["today","calendar","group"].includes(view) || mode === "loading" || !canWrite || !openDays().length;
+  const pv = pendingVotes().length; const tg = $("tab-group");
+  tg.classList.toggle("has-dot", pv > 0);
+  tg.setAttribute("aria-label", pv ? `Group, ${pv} vote${pv === 1 ? "" : "s"} needed` : "Group");
+}
 function renderAll(){
   if (!S.me) S.me = "loading";
+  renderChrome();
   $("todayLabel").textContent = fmtLong(todayStr());
   $("streakN").textContent = weeksStreak(S.me);
   if (view === "today") renderToday();
@@ -942,12 +1013,16 @@ function renderToday(){
   renderNudges(wst);
   renderPicks();
   const any = Object.keys(myLogs()).length;
-  $("todayExtra").innerHTML = !any && mode !== "demo" ? `<div class="empty" style="margin-top:14px">Nothing checked off yet. Tap any category above.<div><button class="btn ghost" id="demoBtn">See it with an example group</button></div></div>` : "";
+  $("todayExtra").innerHTML = !any && mode !== "demo" ? `<div class="empty" style="margin-top:14px">New here? See how a full group looks before you start.<div><button class="btn ghost" id="demoBtn">See it with an example group</button></div></div>` : "";
   const b = $("demoBtn"); if (b) b.onclick = startDemo;
 }
 function renderNudges(wst){
   const n = []; const dow = (new Date().getDay()+6)%7; // Mon=0
   const clown = clownInfo(S.me);
+  // Deadlines first: these cost you a check-off or a vote if they slip.
+  proofDue().forEach(p => n.push(`<div class="nudge warn"><span class="ico">🧢</span><div>Your ${esc(AREA[p.e.area].name)} check-off from ${esc(fmtDow(p.d))} got capped. Add proof by ${esc(fmtWhen(p.ci.deadline))} or it won't count.<div><button class="btn go" data-proof="${esc(p.e.id)}" data-date="${esc(p.d)}">Add proof</button></div></div></div>`));
+  const pv = pendingVotes();
+  if (pv.length) { const r = pv[0]; n.push(`<div class="nudge"><span class="ico">🗳️</span><div>${pv.length === 1 ? `${esc(nameOf(r.id))} asked for a pass on ${esc(fmtDow(r.d))}. Voting closes ${esc(fmtWhen(r.i.closes))}.` : `${pv.length} pass requests need your vote. The first closes ${esc(fmtWhen(r.i.closes))}.`}<div><button class="btn ghost go" data-go="group">Vote</button></div></div></div>`); }
   if (clown) n.push(`<div class="nudge clown"><span class="ico">🤡</span><div>You're clowned: you ${esc(clown.reasons.map(r => r.text).join(" and "))}. Hit this week's goal and it comes off.</div></div>`);
   if (wst.req && !wst.met && dow >= 3) { const left = 7 - dow; n.push(`<div class="nudge warn"><span class="ico">⏰</span><div>Still missing ${esc(listAnd(wst.missing.map(m => m.a.name)))}. ${left} day${left===1?"":"s"} left.</div></div>`); }
   const wk = ymd(monday(new Date()));
@@ -957,6 +1032,8 @@ function renderNudges(wst){
   mine.forEach(p => n.push(`<div class="nudge"><span class="ico">🗳️</span><div>Your pass request is being voted on until ${esc(fmtWhen(p.closes))}: ${p.yes} yes, ${p.no} no.</div></div>`));
   if (wst.req && wst.met) n.push(`<div class="nudge good"><span class="ico">🎉</span><div>Weekly goal hit. Keep going for the block.</div></div>`);
   $("nudges").innerHTML = n.join("");
+  wire($("nudges"));
+  $("nudges").querySelectorAll("[data-go]").forEach(b => b.onclick = () => setView(b.dataset.go));
 }
 function renderPicks(){
   const days = [todayStr(), ymd(addDays(new Date(), -1))].filter(k => entriesOf(S.me, k).length || k === todayStr());
@@ -967,8 +1044,8 @@ function renderPicks(){
     if (k !== todayStr()) html += `<div class="cs-sub">Yesterday · open until ${esc(fmtWhen(dayCloseTs(k)))}</div>`;
     html += list.length ? `<div class="picks">${list.map(e => `<div class="pick" style="--c:var(--${e.area})"><span class="bar"></span><div style="min-width:0"><div class="t">${esc(AREA[e.area].name)} · ${esc(labelOf(e))}</div><div class="s">${esc(e.summary)}</div></div>
         <button class="chipbtn" aria-pressed="${ids.includes(e.id)}" data-pick="${esc(e.id)}" data-day="${k}" ${locked?"disabled":""}>${ids.includes(e.id) ? "Counts" : "Extra"}</button></div>`).join("")}</div>
-      <div class="lockrow"><span>${locked ? "Locked. These can't change now." : list.length > DAILY ? `Pick which ${DAILY} count. If you don't, your first ${DAILY} do.` : "Your first 2 check-offs count automatically."}</span>${!locked ? `<button class="btn ghost" style="padding:7px 12px;font-size:13px" data-lock="${k}">Lock in</button>` : ""}</div>`
-      : `<div class="empty">No check-offs today yet.</div>`;
+      <div class="lockrow"><span>${locked ? "Locked. These can't change now." : `${list.length > DAILY ? `Pick which ${DAILY} count. If you don't, your first ${DAILY} do.` : "Your first 2 check-offs count automatically."} Locks on its own ${esc(fmtWhen(dayCloseTs(k)))}.`}</span></div>`
+      : `<div class="empty">Nothing yet today. Tap <b>Check off</b> to log what you did.</div>`;
   });
   $("picksSec").innerHTML = html;
   $("picksSec").querySelectorAll("[data-pick]").forEach(b => b.onclick = () => {
@@ -976,11 +1053,6 @@ function renderPicks(){
     let ids = pickedIds(S.me, k);
     if (ids.includes(id)) ids = ids.filter(x => x !== id); else { if (ids.length >= DAILY) ids = ids.slice(1); ids.push(id); }
     doc.picks = ids; persistDay(k); renderAll();
-  });
-  $("picksSec").querySelectorAll("[data-lock]").forEach(b => b.onclick = () => {
-    const k = b.dataset.lock; const doc = myLogs()[k]; if (!doc) return;
-    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Lock for good?"; return; }
-    doc.picks = pickedIds(S.me, k); doc.locked = true; persistDay(k); renderAll(); toast("Locked in");
   });
 }
 
@@ -1085,9 +1157,21 @@ function renderGroup(){
   const full = ids.length >= MAX_GROUP;
   html += `<section><div class="card"><div class="spread"><h3 style="font-family:var(--f-display);font-size:20px">${esc(S.settings.name || "Our group")}</h3><span class="badge muted">${ids.length} of ${MAX_GROUP}</span></div>
     <div class="stakes"><span>Miss a week: get clowned</span><span>Miss a block: ${esc(costText(curC))}</span></div>
+    ${isMember(me) ? `<div style="margin-top:12px"><button class="btn ghost" id="passBtn" style="padding:8px 14px;font-size:13.5px" ${canWrite?"":"disabled"}>Request a pass</button></div>` : ""}
     ${!isMember(me) ? (full ? `<p>This group is full.</p>` : `<p>Joining now gives you a prorated goal for the rest of this block: one check-off per day left, starting tomorrow. You start collecting from others in your first full block.</p><div style="margin-top:10px"><button class="btn" id="joinBtn" ${canWrite?"":"disabled"}>Join the group</button></div>`) : ""}
     ${owner ? `<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:700;font-size:14px">Change stakes</summary><p>Changes show in the feed and start with the next two-week block.</p>${settingsForm({name:S.settings.name, cost: curC.cost, mode: curC.mode}, "Save for next block")}</details>` : ""}
   </div></section>`;
+  // pass requests and the card each one is shown as
+  const reqs = ids.flatMap(id => Object.keys(S.passes[id]?.req || {}).map(d => ({id, d, i: passInfo(id, d)}))).filter(r => r.d >= ymd(addDays(new Date(), -14))).sort((a,b) => (a.i.status === "pending" ? 0 : 1) - (b.i.status === "pending" ? 0 : 1) || b.d.localeCompare(a.d));
+  const passCard = r => { const i = r.i; const own = r.id === me;
+    return `<div class="card"><div class="spread"><div><span class="who">${esc(nameOf(r.id))}</span> <span style="color:var(--muted)">· ${esc(fmtDow(r.d))}</span></div>
+      <span class="badge ${i.status==="granted"?"ok":i.status==="denied"?"bad":"warn"}">${i.status==="pending" ? `Voting until ${esc(fmtWhen(i.closes))}` : i.status === "granted" ? "Granted" : "Denied"}</span></div>
+      <p style="color:var(--fg)">${esc(i.req.reason)}</p>
+      <div class="vote-row">${!own && isMember(me) && i.status === "pending" ? `<button class="chipbtn" aria-pressed="${i.mine==="yes"}" data-pv="${esc(i.key)}" data-val="yes" ${canWrite?"":"disabled"}>Yes</button><button class="chipbtn cap" aria-pressed="${i.mine==="no"}" data-pv="${esc(i.key)}" data-val="no" ${canWrite?"":"disabled"}>No</button>` : ""}<span>${i.yes} yes · ${i.no} no${i.status === "pending" ? " · only votes cast count, a tie is a no" : ""}</span></div></div>`; };
+  // votes waiting on you go first, since they close in 24 hours
+  const waiting = pendingVotes().map(p => `${p.id}|${p.d}`);
+  const needVote = reqs.filter(r => waiting.includes(`${r.id}|${r.d}`));
+  if (needVote.length) html += `<section><div class="sec-head"><h2>Needs your vote</h2><span class="eyebrow">${needVote.length} open</span></div><div class="entries">${needVote.map(passCard).join("")}</div></section>`;
   // board
   if (ids.length) {
     html += `<section><div class="sec-head"><h2>Board</h2><span class="eyebrow">Week of ${fmtShort(monday(new Date()))}</span></div><div class="card">`;
@@ -1104,18 +1188,13 @@ function renderGroup(){
     }).join("");
     html += `</div><p style="font-size:12.5px;color:var(--muted);margin:8px 2px 0">You get a private nudge Thursday. From Saturday the group can see who's at risk. Weeks close Sunday night, and a clown comes off when you hit the next week's goal.</p></section>`;
   }
-  // passes
-  const reqs = ids.flatMap(id => Object.keys(S.passes[id]?.req || {}).map(d => ({id, d, i: passInfo(id, d)}))).filter(r => r.d >= ymd(addDays(new Date(), -14))).sort((a,b) => (a.i.status === "pending" ? 0 : 1) - (b.i.status === "pending" ? 0 : 1) || b.d.localeCompare(a.d));
-  html += `<section><div class="sec-head"><h2>Passes</h2>${isMember(me) ? `<button class="btn ghost" id="passBtn" style="padding:7px 12px;font-size:13px" ${canWrite?"":"disabled"}>Request a pass</button>` : ""}</div>`;
-  html += reqs.length ? `<div class="entries">${reqs.map(r => { const i = r.i; const own = r.id === me;
-    return `<div class="card"><div class="spread"><div><span class="who">${esc(nameOf(r.id))}</span> <span style="color:var(--muted)">· ${esc(fmtDow(r.d))}</span></div>
-      <span class="badge ${i.status==="granted"?"ok":i.status==="denied"?"bad":"warn"}">${i.status==="pending" ? `Voting until ${esc(fmtWhen(i.closes))}` : i.status === "granted" ? "Granted" : "Denied"}</span></div>
-      <p style="color:var(--fg)">${esc(i.req.reason)}</p>
-      <div class="vote-row">${!own && isMember(me) && i.status === "pending" ? `<button class="chipbtn" aria-pressed="${i.mine==="yes"}" data-pv="${esc(i.key)}" data-val="yes" ${canWrite?"":"disabled"}>Yes</button><button class="chipbtn cap" aria-pressed="${i.mine==="no"}" data-pv="${esc(i.key)}" data-val="no" ${canWrite?"":"disabled"}>No</button>` : ""}<span>${i.yes} yes · ${i.no} no${i.status === "pending" ? " · only votes cast count, a tie is a no" : ""}</span></div></div>`; }).join("")}</div>`
-    : `<div class="empty">No pass requests in the last two weeks.</div>`;
-  html += `</section>`;
-  // feed
+  // feed: the main social surface, so it comes before the pass history
   html += `<section><div class="sec-head"><h2>Feed</h2><span class="eyebrow">Last 14 days</span></div><div class="entries">${feedHTML()}</div></section>`;
+  // pass history (open requests you still need to vote on are already shown above)
+  const rest = reqs.filter(r => !needVote.includes(r));
+  html += `<section><div class="sec-head"><h2>Passes</h2><span class="eyebrow">Last 14 days</span></div>`;
+  html += rest.length ? `<div class="entries">${rest.map(passCard).join("")}</div>` : `<div class="empty">${needVote.length ? "No other pass requests" : "No pass requests"} in the last two weeks.</div>`;
+  html += `</section>`;
   host.innerHTML = html;
   wire(host); wireSettings(false);
   const jb = $("joinBtn"); if (jb) jb.onclick = joinGroup;
@@ -1242,7 +1321,9 @@ function openSheet({area, date, entry} = {}){
   $("fPhoto").value = ""; keepPhoto = entry?.photo || null; $("photoField").hidden = mode === "local";
   if (keepPhoto) { $("fPhotoPrev").src = photoURL(keepPhoto); $("fPhotoPrev").hidden = false; $("fPhotoClear").hidden = false; } else { $("fPhotoPrev").hidden = true; $("fPhotoClear").hidden = true; }
   renderDayPick(); validate(); $("saveBtn").textContent = entry ? "Save" : "Check off";
-  sheet.showModal(); setTimeout(() => $("fSummary").focus(), 50);
+  sheet.showModal();
+  // On a phone, focusing the text box pops the keyboard over the category picker, so only do it with a mouse.
+  if (matchMedia("(hover: hover) and (pointer: fine)").matches) setTimeout(() => $("fSummary").focus(), 50);
 }
 const closeSheet = () => { if (sheet.open) sheet.close(); };
 $("cancelBtn").onclick = closeSheet;
@@ -1468,3 +1549,5 @@ setView(view);
 initStore();
 })();
 </script>
+</body>
+</html>
