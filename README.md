@@ -18,6 +18,8 @@ Then open http://localhost:5173. Use your browser's phone view, since the app is
 
 `npm run build` makes the production files in `dist/`.
 
+`npm test` runs the rules tests in `test/rules.test.js`. Run them after any change to `src/rules.js`, since pay-ups depend on those rules.
+
 ## Code
 
 | File | What's in it |
