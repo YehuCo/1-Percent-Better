@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F3F5F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101512" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="1% Better">
+<title>1% Better</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+</head>
+<body>
+
+<div class="wrap">
+  <div id="banner" class="banner" hidden></div>
+  <header class="top">
+    <div>
+      <div class="eyebrow" id="todayLabel">Today</div>
+      <h1>1<span>%</span> Better<span class="trial-tag">Trial</span></h1>
+    </div>
+    <div class="streak"><b class="num" id="streakN">0</b><span id="streakLbl">weeks hit in a row</span></div>
+  </header>
+
+  <main id="view-today" class="view">
+    <div class="nudges" id="nudges"></div>
+    <section id="picksSec"></section>
+    <section>
+      <div class="sec-head"><h2>Your goals</h2></div>
+      <p class="g-intro">Tap a category to see what you've done in it. Only 2 check-offs a day count, so spread them out.</p>
+      <div class="goals" id="goals"></div>
+    </section>
+    <div id="todayExtra"></div>
+  </main>
+
+  <main id="view-calendar" class="view" hidden>
+    <div class="member-tabs" id="calMembers"></div>
+    <div class="cal-nav">
+      <h2 id="calTitle">Month</h2>
+      <div class="navs">
+        <button class="btn ghost" id="calPrev" aria-label="Previous month">‹</button>
+        <button class="btn ghost" id="calToday">Today</button>
+        <button class="btn ghost" id="calNext" aria-label="Next month">›</button>
+      </div>
+    </div>
+    <div class="cal-legend" id="calLegend"></div>
+    <div class="cal" id="cal"></div>
+    <p class="help" style="color:var(--muted);font-size:13px;margin-top:12px">Tap a day to see its check-offs and photos. Stripes show the 2 that counted.</p>
+  </main>
+
+  <main id="view-group" class="view" hidden><div id="groupBody"></div></main>
+
+  <main id="view-pot" class="view" hidden>
+    <div class="jar-card" id="jarCard">
+      <canvas id="jarCanvas"></canvas>
+      <div class="jar-top">
+        <div class="kick" id="jarKick">On the line this block</div>
+        <div class="amt num" id="jarAmt">$0</div>
+        <div class="sub2" id="jarSub"></div>
+      </div>
+      <div class="jar-stats" id="jarStats"></div>
+    </div>
+    <div id="potBody"></div>
+  </main>
+
+  <main id="view-wrapped" class="view" hidden>
+    <div class="wrapped-ctl">
+      <div><div class="eyebrow">Your year</div><h2 style="font-size:22px;font-weight:800">Wrapped</h2></div>
+      <select id="yearSel" aria-label="Year"></select>
+    </div>
+    <div class="story" id="story">
+      <canvas id="storyBg"></canvas>
+      <div class="bars" id="storyBars"></div>
+      <div id="slideHost" style="flex:1;display:flex"></div>
+      <div class="tapzones"><button id="tapPrev" aria-label="Previous"></button><button id="tapNext" aria-label="Next"></button></div>
+    </div>
+    <div class="story-foot"><span id="storyNote"></span><span class="num" id="storyPos"></span></div>
+  </main>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <div class="in">
+    <button role="tab" id="tab-today" aria-selected="true" data-view="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M8.5 12.3l2.4 2.4 4.6-4.9"/></svg>Today</button>
+    <button role="tab" id="tab-calendar" aria-selected="false" data-view="calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Calendar</button>
+    <button role="tab" id="tab-group" aria-selected="false" data-view="group"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.2"/><circle cx="17" cy="9.5" r="2.5"/><path d="M3.5 19c.8-3.2 3-5 5.5-5s4.7 1.8 5.5 5M14.5 14.6c2.6-.6 5 .8 6 4.4"/></svg>Group</button>
+    <button role="tab" id="tab-pot" aria-selected="false" data-view="pot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 7h10l1.5 3.5c1.5 3.5.5 9.5-6.5 9.5S4 14 5.5 10.5z"/><path d="M9 4h6M12 12v4M10.5 13h2.5"/></svg>Pay-ups</button>
+    <button role="tab" id="tab-wrapped" aria-selected="false" data-view="wrapped"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3l2.5 5.5L20 9l-4.2 4 1.1 6L12 16l-4.9 3 1.1-6L4 9l5.5-.5z"/></svg>Wrapped</button>
+  </div>
+</nav>
+
+<button class="fab" id="fab" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Check off</button>
+
+<dialog id="sheet">
+  <form class="sheet" id="logForm" method="dialog" novalidate>
+    <h2 id="sheetTitle">Check off</h2>
+    <p class="sub">Did it make you 1% better? Then it counts.</p>
+    <div class="field"><label>Category</label><div class="seg" id="areaSeg"></div></div>
+    <div class="field"><label for="fActivity">What did you do?</label><select id="fActivity"></select></div>
+    <div class="field" id="otherField" hidden><label for="fOther">Write your own</label><input id="fOther" autocomplete="off" placeholder="e.g. Cold plunge"></div>
+    <div class="field"><label for="fSummary">One sentence about it</label><textarea id="fSummary" style="min-height:70px"></textarea><div class="help"><span class="count no" id="sumCount"></span></div></div>
+    <div class="field"><label for="fDetail" id="fDetailLabel">Detail <span style="font-weight:400;color:var(--muted)">(optional)</span></label><input id="fDetail" autocomplete="off"></div>
+    <div class="field" id="photoField">
+      <label>Photo <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <div class="photo-pick"><img id="fPhotoPrev" alt="" hidden><label class="btn ghost" for="fPhoto" id="fPhotoBtn">Add photo</label><input type="file" id="fPhoto" accept="image/*"><button type="button" class="icon-btn" id="fPhotoClear" hidden>Remove</button></div>
+    </div>
+    <div class="field"><label class="toggle" for="fNew"><span>Was this new?<small>Trying something for the first time</small></span><input type="checkbox" id="fNew"></label></div>
+    <div class="field" id="privField" hidden><label class="toggle" for="fPriv"><span>Keep details private<small>The group sees only the category</small></span><input type="checkbox" id="fPriv"></label></div>
+    <div class="field" id="dayField"><label>Day</label><div class="daypick" id="dayPick"></div><span class="help" id="dayHelp"></span></div>
+    <div class="sheet-acts">
+      <button type="button" class="btn ghost" id="cancelBtn">Cancel</button>
+      <button type="submit" class="btn" id="saveBtn" disabled>Check off</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="proofSheet">
+  <form class="sheet" id="proofForm" method="dialog" novalidate>
+    <h2>Show your proof</h2>
+    <p class="sub">Two friends called cap. Add a photo or screenshot within 24 hours or this check-off won't count. Proof is visible to the group, even on a private entry.</p>
+    <div class="field"><label>Photo or screenshot</label><div class="photo-pick"><img id="pPhotoPrev" alt="" hidden><label class="btn ghost" for="pPhoto">Choose image</label><input type="file" id="pPhoto" accept="image/*"></div></div>
+    <div class="field"><label for="pNote">Anything to add?</label><textarea id="pNote"></textarea></div>
+    <div class="sheet-acts"><button type="button" class="btn ghost" id="proofCancel">Cancel</button><button type="submit" class="btn" id="proofSave" disabled>Submit proof</button></div>
+  </form>
+</dialog>
+
+<dialog id="passSheet">
+  <form class="sheet" id="passForm" method="dialog" novalidate>
+    <h2>Request a pass</h2>
+    <p class="sub">A pass is a free skip for one day. The group has 24 hours to vote. If more say yes than no, your weekly and two-week goals each drop by 1 check-off.</p>
+    <div class="field"><label for="passDate">Day</label><select id="passDate"></select></div>
+    <div class="field"><label for="passReason">One-line reason</label><input id="passReason" maxlength="120" placeholder="e.g. Flying home for my grandma's funeral"></div>
+    <div class="sheet-acts"><button type="button" class="btn ghost" id="passCancel">Cancel</button><button type="submit" class="btn" id="passSave" disabled>Send to group</button></div>
+  </form>
+</dialog>
+
+<dialog id="catSheet" aria-labelledby="csTitle"><div class="sheet day-sheet" id="csBody"></div></dialog>
+<dialog id="daySheet" aria-labelledby="dsTitle"><div class="sheet day-sheet" id="dsBody"></div></dialog>
+<dialog id="lightbox"><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="/src/app.js"></script>
+</body>
+</html>
